@@ -1,380 +1,1498 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로맨틱 허니문 플래너</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>온라인 허니문 플래너</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        window.firebase = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, setLogLevel };
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import {
+        getAuth,
+        signInAnonymously,
+        signInWithCustomToken,
+      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import {
+        getFirestore,
+        setLogLevel,
+      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+      window.firebase = {
+        initializeApp,
+        getAuth,
+        signInAnonymously,
+        signInWithCustomToken,
+        getFirestore,
+        setLogLevel,
+      };
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        @keyframes bounce-slow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+      @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+      body {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        vertical-align: baseline;
+        font-family: "Pretendard", sans-serif;
+        line-height: 1.5;
+        letter-spacing: -0.028rem;
+      }
+      @keyframes bounce-slow {
+        0%,
+        100% {
+          transform: translateY(0);
         }
-        .animate-bounce-slow {
-            animation: bounce-slow 4s infinite ease-in-out;
+        50% {
+          transform: translateY(-10px);
         }
-        @keyframes pulse-once {
-            0% { transform: scale(0.8); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1.0); opacity: 1; }
+      }
+      .animate-bounce-slow {
+        animation: bounce-slow 4s infinite ease-in-out;
+      }
+      @keyframes pulse-once {
+        0% {
+          transform: scale(0.8);
+          opacity: 0;
         }
-        .animate-pulse-once {
-            animation: pulse-once 0.5s ease-out;
+        50% {
+          transform: scale(1.05);
+          opacity: 1;
         }
-        .card:hover {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        100% {
+          transform: scale(1);
+          opacity: 1;
         }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            animation: fadeIn 0.3s ease-in-out;
+      }
+      .animate-pulse-once {
+        animation: pulse-once 0.5s ease-out;
+      }
+      .card:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 0;
+        max-width: 900px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease-out;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
         }
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        to {
+          opacity: 1;
         }
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 0;
-            max-width: 900px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease-out;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        to {
+          transform: translateY(0);
+          opacity: 1;
         }
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .map-container {
-            width: 100%;
-            height: 400px;
-            border-radius: 12px 12px 0 0;
-        }
+      }
+      .map-container {
+        width: 100%;
+        height: 400px;
+        border-radius: 12px 12px 0 0;
+      }
     </style>
-</head>
-<body id="root">
-</body>
+  </head>
+  <body id="root"></body>
 </html>
 
 <script>
-    const flightTimes = {
-        '인도네시아': '7시간 30분', '태국': '5시간 30분', '베트남': '5시간', '일본': '2시간', '필리핀': '4시간', '말레이시아': '6시간 30분',
-        '아랍에미리트': '9시간', '튀르키예': '11시간', '몰디브': '9시간 30분', '싱가포르': '6시간 20분', '호주': '10시간', '프렌치 폴리네시아': '14시간',
-        '뉴질랜드': '11시간', '피지': '12시간', '뉴칼레도니아·바누아투': '13시간', '프랑스': '13시간', '이탈리아': '12시간 30분', '스위스': '12시간',
-        '스페인': '13시간 30분', '포르투갈': '14시간', '독일': '12시간', '노르웨이': '11시간 30분', '핀란드': '10시간 30분', '스웨덴': '11시간',
-        '그리스': '12시간', '영국': '12시간', '체코': '11시간 30분', '크로아티아': '12시간', '슬로베니아': '12시간', '덴마크': '11시간',
-        '미국': '13시간', '캐나다': '11시간', '멕시코': '14시간', '칠레': '24시간', '페루': '23시간', '바하마': '16시간', '브라질': '25시간',
-        '아르헨티나': '26시간', '탄자니아': '15시간', '케냐': '14시간 30분', '모로코': '14시간', '이집트': '12시간 30분', '모리셔스': '12시간', '세이셸': '11시간 30분'
+  const flightTimes = {
+    인도네시아: "7시간 30분",
+    태국: "5시간 30분",
+    베트남: "5시간",
+    일본: "2시간",
+    필리핀: "4시간",
+    말레이시아: "6시간 30분",
+    아랍에미리트: "9시간",
+    튀르키예: "11시간",
+    몰디브: "9시간 30분",
+    싱가포르: "6시간 20분",
+    호주: "10시간",
+    "프렌치 폴리네시아": "14시간",
+    뉴질랜드: "11시간",
+    피지: "12시간",
+    "뉴칼레도니아·바누아투": "13시간",
+    프랑스: "13시간",
+    이탈리아: "12시간 30분",
+    스위스: "12시간",
+    스페인: "13시간 30분",
+    포르투갈: "14시간",
+    독일: "12시간",
+    노르웨이: "11시간 30분",
+    핀란드: "10시간 30분",
+    스웨덴: "11시간",
+    그리스: "12시간",
+    영국: "12시간",
+    체코: "11시간 30분",
+    크로아티아: "12시간",
+    슬로베니아: "12시간",
+    덴마크: "11시간",
+    미국: "13시간",
+    캐나다: "11시간",
+    멕시코: "14시간",
+    칠레: "24시간",
+    페루: "23시간",
+    바하마: "16시간",
+    브라질: "25시간",
+    아르헨티나: "26시간",
+    탄자니아: "15시간",
+    케냐: "14시간 30분",
+    모로코: "14시간",
+    이집트: "12시간 30분",
+    모리셔스: "12시간",
+    세이셸: "11시간 30분",
+  };
+
+  const destinationsData = [
+    {
+      name: "발리",
+      country: "인도네시아",
+      continent: "아시아",
+      vibe: "럭셔리 휴양 & 힐링",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "관광+휴양",
+      bestMonths: [4, 5, 6, 7, 8, 9, 10],
+      goodMonths: [1, 2, 3, 11, 12],
+      note: "건기인 4월~10월이 최적기. 우붓의 논 뷰 리조트와 스미냑의 비치 클럽 추천.",
+    },
+    {
+      name: "롬복",
+      country: "인도네시아",
+      continent: "아시아",
+      vibe: "프라이빗 휴양",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "휴양",
+      bestMonths: [4, 5, 6, 7, 8, 9, 10],
+      goodMonths: [1, 2, 3, 11, 12],
+      note: "길리 섬(Gili Islands)에서의 스노클링 및 다이빙 명소. 발리보다 조용하고 프라이빗함.",
+    },
+    {
+      name: "몰디브",
+      country: "몰디브",
+      continent: "아시아",
+      vibe: "궁극의 럭셔리",
+      budget: "매우 높음(1200만원 ~)",
+      travelType: "휴양",
+      bestMonths: [11, 12, 1, 2, 3],
+      goodMonths: [4, 10],
+      note: "워터 빌라에서의 로맨틱한 경험. 섬마다 리조트 분위기가 다름.",
+    },
+    {
+      name: "푸켓·카오락",
+      country: "태국",
+      continent: "아시아",
+      vibe: "가성비 & 액티비티",
+      budget: "낮음(~500만원)",
+      travelType: "관광+휴양",
+      bestMonths: [11, 12, 1, 2, 3],
+      goodMonths: [4, 10],
+      note: "겨울철 건기가 가장 좋음. 빠통, 카론 등 지역별 특색 확인. 피피섬 투어 필수.",
+    },
+    {
+      name: "코사무이",
+      country: "태국",
+      continent: "아시아",
+      vibe: "고요한 휴양",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "휴양",
+      bestMonths: [2, 3, 4],
+      goodMonths: [1, 5, 12],
+      note: "타이만의 아름다운 섬. 건기가 짧고 우기가 비교적 덜 심함.",
+    },
+    {
+      name: "방콕·치앙마이",
+      country: "태국",
+      continent: "아시아",
+      vibe: "문화 & 미식",
+      budget: "낮음(~500만원)",
+      travelType: "관광+휴양",
+      bestMonths: [11, 12, 1, 2],
+      goodMonths: [3, 10],
+      note: "북부(치앙마이)와 수도(방콕)를 잇는 문화 체험 중심의 여행.",
+    },
+    {
+      name: "다낭·호이안",
+      country: "베트남",
+      continent: "아시아",
+      vibe: "문화 & 비치",
+      budget: "낮음(~500만원)",
+      travelType: "관광+휴양",
+      bestMonths: [2, 3, 4, 5, 6],
+      goodMonths: [1, 7, 8, 9, 11],
+      note: "베트남 중부 최대의 해변 도시와 유네스코 세계문화유산 호이안의 조화",
+    },
+    {
+      name: "푸꾸옥",
+      country: "베트남",
+      continent: "아시아",
+      vibe: "조용한 섬",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "휴양",
+      bestMonths: [11, 12, 1, 2, 3, 4],
+      goodMonths: [5, 10],
+      note: "베트남 최남단의 열대 섬. 아름다운 선셋과 프라이빗 리조트",
+    },
+    {
+      name: "나트랑",
+      country: "베트남",
+      continent: "아시아",
+      vibe: "해양 스포츠",
+      budget: "낮음(~500만원)",
+      travelType: "관광+휴양",
+      bestMonths: [1, 2, 3, 4, 5],
+      goodMonths: [6, 11, 12],
+      note: "베트남의 대표적인 해양 휴양지. 스노클링과 머드 스파가 유명",
+    },
+    {
+      name: "도쿄·교토",
+      country: "일본",
+      continent: "아시아",
+      vibe: "전통 & 현대",
+      budget: "높음(800만원 ~ 1200만원)",
+      travelType: "관광",
+      bestMonths: [3, 4, 5, 10, 11],
+      goodMonths: [2, 6, 9, 12],
+      note: "일본의 수도와 고도(古都)를 잇는 문화 여행. 벚꽃(3~4월)과 단풍(11월) 시즌 추천",
+    },
+    {
+      name: "삿포로",
+      country: "일본",
+      continent: "아시아",
+      vibe: "설국 로맨스",
+      budget: "높음(800만원 ~ 1200만원)",
+      travelType: "관광+휴양",
+      bestMonths: [7, 8],
+      goodMonths: [6, 9, 12, 1, 2],
+      note: "여름은 시원하고 쾌적. 겨울은 눈 축제와 스키 명소",
+    },
+    {
+      name: "오키나와",
+      country: "일본",
+      continent: "아시아",
+      vibe: "열대 해양",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "휴양",
+      bestMonths: [4, 5, 10, 11],
+      goodMonths: [3, 6, 12],
+      note: "일본 최남단의 열대 섬. 에메랄드빛 바다와 산호초",
+    },
+    {
+      name: "홋카이도",
+      country: "일본",
+      continent: "아시아",
+      vibe: "자연 & 온천",
+      budget: "높음(800만원 ~ 1200만원)",
+      travelType: "관광+휴양",
+      bestMonths: [7, 8],
+      goodMonths: [6, 9, 12, 1, 2],
+      note: "광활한 자연과 온천. 여름은 라벤더, 겨울은 설경과 스키",
+    },
+    {
+      name: "세부·보홀·보라카이",
+      country: "필리핀",
+      continent: "아시아",
+      vibe: "해양 천국",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "휴양",
+      bestMonths: [12, 1, 2, 3, 4, 5],
+      goodMonths: [11, 6],
+      note: "필리핀의 대표적인 해양 휴양지. 세부는 다이빙, 보홀은 자연, 보라카이는 화이트비치가 유명",
+    },
+    {
+      name: "코타키나발루",
+      country: "말레이시아",
+      continent: "아시아",
+      vibe: "자연 & 휴양",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "관광+휴양",
+      bestMonths: [3, 4, 5, 6, 7, 8],
+      goodMonths: [2, 9, 10],
+      note: "보르네오 섬의 관문. 키나발루 산과 석양이 아름다운 해변",
+    },
+    {
+      name: "랑카위",
+      country: "말레이시아",
+      continent: "아시아",
+      vibe: "열대 섬",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "휴양",
+      bestMonths: [12, 1, 2, 3],
+      goodMonths: [11, 4],
+      note: "말레이시아 최북단의 면세 섬. 케이블카와 스카이브리지가 유명",
+    },
+    {
+      name: "두바이·아부다비",
+      country: "아랍에미리트",
+      continent: "아시아",
+      vibe: "럭셔리 & 사막",
+      budget: "매우 높음(1200만원 ~)",
+      travelType: "관광+휴양",
+      bestMonths: [11, 12, 1, 2, 3],
+      goodMonths: [4, 10],
+      note: "사막 사파리와 쇼핑.",
+    },
+    {
+      name: "이스탄불",
+      country: "튀르키예",
+      continent: "아시아",
+      vibe: "동서양 문화",
+      budget: "중간(500만원 ~ 800만원)",
+      travelType: "관광",
+      bestMonths: [4, 5, 9, 10],
+      goodMonths: [3, 6, 11],
+      note: "모스크와 바자르.",
+    },
+    {
+      name: "싱가포르",
+      country: "싱가포르",
+      continent: "아시아",
+      vibe: "도시 & 미식",
+      budget: "높음(800만원 ~ 1200만원)",
+      travelType: "관광",
+      bestMonths: [2, 3, 4, 7, 8],
+      goodMonths: [1, 5, 6, 9, 10, 11, 12],
+      note: "도시국가의 완벽한 인프라. 마리나베이샌즈와 가든스바이더베이 필수 코스",
+    },
+    {
+      name: "싱가포르",
+      country: "싱가포르",
+      continent: "아시아",
+      vibe: "쇼핑 & 테마파크",
+      budget: "높음(800만원 ~ 1200만원)",
+      travelType: "관광",
+      bestMonths: [2, 3, 7, 8, 9],
+      goodMonths: [1, 4, 5, 6, 10, 11, 12],
+      note: "유니버셜 스튜디오와 센토사 섬에서의 즐거움",
+    },
+    {
+      name: "시드니",
+      country: "호주",
+      continent: "오세아니아",
+      vibe: "도시 & 자연",
+      budget: "매우 높음(1200만원 ~)",
+      travelType: "관광+휴양",
+      bestMonths: [12, 1, 2],
+      goodMonths: [3, 11],
+      note: "남반구 여름 최적.",
+    },
+    {
+      name: "타히티",
+      country: "프렌치 폴리네시아",
+      continent: "오세아니아",
+      vibe: "열대 낙원",
+      budget: "매우 높음(1200만원 ~)",
+      travelType: "휴양",
+      bestMonths: [5, 6, 7, 8, 9, 10],
+      goodMonths: [4, 11],
+      note: "오버워터 방갈로.",
+    },
+    {
+      name: "뉴질랜드",
+      country: "뉴질랜드",
+      continent: "오세아니아",
+      vibe: "어드벤처",
+      budget: "매우 높음(1200만원 ~)",
+      travelType: "액티비티",
+      bestMonths: [1, 2, 3],
+      goodMonths: [12, 4],
+      note: "퀸스타운 번지점프.",
+    },
+    {
+      name: "피지",
+      country: "피지",
+      continent: "오세아니아",
+      vibe: "열대 섬",
+      budget: "매우 높음(1200만원 ~)",
+      travelType: "휴양",
+      bestMonths: [5, 6, 7, 8, 9, 10],
+      goodMonths: [4, 11],
+      note: "남태평양의 보석.",
+    },
+    {
+      name: "뉴칼레도니아·바누아투",
+      country: "뉴칼레도니아·바누아투",
+      continent: "오세아니아",
+      vibe: "미지의 열대",
+      budget: "매우 높음(1200만원 ~)",
+      travelType: "휴양",
+      bestMonths: [9, 10, 11],
+      goodMonths: [4, 5, 8],
+      note: "원시적 자연.",
+    },
+    {
+      name: "북부·중부·서부",
+      country: "프랑스",
+      continent: "유럽",
+      vibe: "클래식 로맨스",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [5, 6, 9, 10],
+      goodMonths: [4, 7],
+      note: "에펠탑, 루브르.",
+    },
+    {
+      name: "남부",
+      country: "프랑스",
+      continent: "유럽",
+      vibe: "지중해 휴양",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광+휴양",
+      bestMonths: [5, 6, 7, 8, 9],
+      goodMonths: [4, 10],
+      note: "프로방스와 코트다쥐르.",
+    },
+    {
+      name: "북부",
+      country: "이탈리아",
+      continent: "유럽",
+      vibe: "예술 & 역사",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [5, 6, 9, 10],
+      goodMonths: [4, 7],
+      note: "베네치아, 밀라노.",
+    },
+    {
+      name: "중부",
+      country: "이탈리아",
+      continent: "유럽",
+      vibe: "르네상스",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [4, 5, 6, 9, 10],
+      goodMonths: [3, 11],
+      note: "로마, 피렌체.",
+    },
+    {
+      name: "남부",
+      country: "이탈리아",
+      continent: "유럽",
+      vibe: "해안 & 열정",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광+휴양",
+      bestMonths: [5, 6, 7, 8, 9],
+      goodMonths: [4, 10],
+      note: "아말피 해안.",
+    },
+    {
+      name: "북부·중부",
+      country: "스위스",
+      continent: "유럽",
+      vibe: "알프스",
+      budget: "높음(1000만원~)",
+      travelType: "관광+휴양",
+      bestMonths: [6, 7, 8, 9],
+      goodMonths: [5, 10],
+      note: "산악 열차 코스.",
+    },
+    {
+      name: "남부·알프스",
+      country: "스위스",
+      continent: "유럽",
+      vibe: "산악 리조트",
+      budget: "높음(1000만원~)",
+      travelType: "액티비티",
+      bestMonths: [12, 1, 2, 3],
+      goodMonths: [6, 7, 8],
+      note: "스키 천국.",
+    },
+    {
+      name: "북부",
+      country: "스페인",
+      continent: "유럽",
+      vibe: "해안 & 미식",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [5, 6, 9, 10],
+      goodMonths: [4, 7, 8],
+      note: "바르셀로나 가우디.",
+    },
+    {
+      name: "중부",
+      country: "스페인",
+      continent: "유럽",
+      vibe: "역사 & 문화",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [4, 5, 6, 9, 10],
+      goodMonths: [3, 11],
+      note: "마드리드 플라멩코.",
+    },
+    {
+      name: "남부",
+      country: "스페인",
+      continent: "유럽",
+      vibe: "안달루시아",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [4, 5, 6, 9, 10],
+      goodMonths: [3, 11],
+      note: "세비야 그라나다.",
+    },
+    {
+      name: "카나리아 제도",
+      country: "스페인",
+      continent: "유럽",
+      vibe: "아열대 섬",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "휴양",
+      bestMonths: [1, 2, 3, 4, 5, 11, 12],
+      goodMonths: [6, 10],
+      note: "연중 온화한 기후.",
+    },
+    {
+      name: "북부",
+      country: "포르투갈",
+      continent: "유럽",
+      vibe: "포트와인",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [5, 6, 9, 10],
+      goodMonths: [4, 7],
+      note: "포르투 와인 투어.",
+    },
+    {
+      name: "중부·남부",
+      country: "포르투갈",
+      continent: "유럽",
+      vibe: "수도 & 해안",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광+휴양",
+      bestMonths: [4, 5, 6, 9, 10],
+      goodMonths: [3, 11],
+      note: "리스본 알가르브.",
+    },
+    {
+      name: "마데이라 제도",
+      country: "포르투갈",
+      continent: "유럽",
+      vibe: "아열대 섬",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "휴양",
+      bestMonths: [4, 5, 6, 9, 10],
+      goodMonths: [3, 7, 11],
+      note: "대서양의 진주.",
+    },
+    {
+      name: "북부·서부",
+      country: "독일",
+      continent: "유럽",
+      vibe: "성 & 문화",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [5, 6, 7, 8, 9],
+      goodMonths: [4, 10],
+      note: "노이슈반슈타인.",
+    },
+    {
+      name: "남부",
+      country: "독일",
+      continent: "유럽",
+      vibe: "알프스 & 맥주",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8, 9],
+      goodMonths: [5, 10],
+      note: "뮌헨 남부 알프스.",
+    },
+    {
+      name: "남부",
+      country: "노르웨이",
+      continent: "유럽",
+      vibe: "피오르",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [5, 6, 7, 8],
+      goodMonths: [9],
+      note: "송네 피오르.",
+    },
+    {
+      name: "중부",
+      country: "노르웨이",
+      continent: "유럽",
+      vibe: "산악 & 전통",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "베르겐 중부.",
+    },
+    {
+      name: "북부",
+      country: "노르웨이",
+      continent: "유럽",
+      vibe: "백야 & 오로라",
+      budget: "높음(1000만원~)",
+      travelType: "액티비티",
+      bestMonths: [12, 1, 2, 6, 7],
+      goodMonths: [3, 5, 8],
+      note: "백야와 오로라.",
+    },
+    {
+      name: "남부",
+      country: "핀란드",
+      continent: "유럽",
+      vibe: "호수 & 자연",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "헬싱키 호수.",
+    },
+    {
+      name: "중부",
+      country: "핀란드",
+      continent: "유럽",
+      vibe: "숲 & 호수",
+      budget: "높음(1000만원~)",
+      travelType: "휴양",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "중부 숲과 호수.",
+    },
+    {
+      name: "북부",
+      country: "핀란드",
+      continent: "유럽",
+      vibe: "오로라 & 사미",
+      budget: "높음(1000만원~)",
+      travelType: "액티비티",
+      bestMonths: [12, 1, 2, 3],
+      goodMonths: [6, 7, 8],
+      note: "라플란드 오로라.",
+    },
+    {
+      name: "남부·중부",
+      country: "스웨덴",
+      continent: "유럽",
+      vibe: "수도 & 문화",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "스톡홀름.",
+    },
+    {
+      name: "북부",
+      country: "스웨덴",
+      continent: "유럽",
+      vibe: "백야 & 자연",
+      budget: "높음(1000만원~)",
+      travelType: "액티비티",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "북부 백야.",
+    },
+    {
+      name: "그리스",
+      country: "그리스",
+      continent: "유럽",
+      vibe: "신화 & 바다",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광+휴양",
+      bestMonths: [5, 6, 9],
+      goodMonths: [4, 7, 8, 10],
+      note: "산토리니 일몰.",
+    },
+    {
+      name: "영국",
+      country: "영국",
+      continent: "유럽",
+      vibe: "클래식",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "런던 박물관.",
+    },
+    {
+      name: "체코",
+      country: "체코",
+      continent: "유럽",
+      vibe: "중세 & 낭만",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [5, 6, 9],
+      goodMonths: [4, 7, 8, 10],
+      note: "프라하 구시가.",
+    },
+    {
+      name: "크로아티아",
+      country: "크로아티아",
+      continent: "유럽",
+      vibe: "아드리아해",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광+휴양",
+      bestMonths: [6, 9],
+      goodMonths: [5, 7, 8, 10],
+      note: "두브로브니크.",
+    },
+    {
+      name: "슬로베니아",
+      country: "슬로베니아",
+      continent: "유럽",
+      vibe: "동화 자연",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광+휴양",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "블레드 호수.",
+    },
+    {
+      name: "덴마크",
+      country: "덴마크",
+      continent: "유럽",
+      vibe: "동화 & 디자인",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "코펜하겐.",
+    },
+    {
+      name: "서부",
+      country: "미국",
+      continent: "미주",
+      vibe: "대자연 & 도시",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [4, 5, 6, 9, 10],
+      goodMonths: [3, 7, 8],
+      note: "SF, LA, 그랜드캐니언.",
+    },
+    {
+      name: "동부",
+      country: "미국",
+      continent: "미주",
+      vibe: "도시 & 문화",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [4, 5, 6, 9, 10],
+      goodMonths: [3, 11],
+      note: "뉴욕 보스턴.",
+    },
+    {
+      name: "하와이",
+      country: "미국",
+      continent: "미주",
+      vibe: "다이나믹",
+      budget: "높음(1000만원~)",
+      travelType: "관광+휴양",
+      bestMonths: [4, 5, 9, 10],
+      goodMonths: [3, 6, 11],
+      note: "오아후 빅아일랜드.",
+    },
+    {
+      name: "괌·사이판",
+      country: "미국",
+      continent: "미주",
+      vibe: "가까운 휴양",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "휴양",
+      bestMonths: [12, 1, 2, 3, 4],
+      goodMonths: [5, 11],
+      note: "미국령 열대.",
+    },
+    {
+      name: "서부·동부",
+      country: "캐나다",
+      continent: "미주",
+      vibe: "대자연 & 도시",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8, 9],
+      goodMonths: [5, 10],
+      note: "밴쿠버 토론토.",
+    },
+    {
+      name: "중부",
+      country: "캐나다",
+      continent: "미주",
+      vibe: "자연 & 호수",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [6, 7, 8],
+      goodMonths: [5, 9],
+      note: "중부 자연.",
+    },
+    {
+      name: "칸쿤",
+      country: "멕시코",
+      continent: "미주",
+      vibe: "카리브해",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "휴양",
+      bestMonths: [12, 1, 2, 3, 4],
+      goodMonths: [5, 11],
+      note: "카리브 바다.",
+    },
+    {
+      name: "칠레",
+      country: "칠레",
+      continent: "미주",
+      vibe: "남미 대자연",
+      budget: "높음(1000만원~)",
+      travelType: "액티비티",
+      bestMonths: [12, 1, 2, 3],
+      goodMonths: [11, 4],
+      note: "파타고니아.",
+    },
+    {
+      name: "페루",
+      country: "페루",
+      continent: "미주",
+      vibe: "잉카 문명",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [5, 6, 7, 8, 9],
+      goodMonths: [4, 10],
+      note: "마추픽추.",
+    },
+    {
+      name: "바하마",
+      country: "바하마",
+      continent: "미주",
+      vibe: "카리브 낙원",
+      budget: "높음(1000만원~)",
+      travelType: "휴양",
+      bestMonths: [12, 1, 2, 3, 4],
+      goodMonths: [5, 11],
+      note: "핑크샌드 비치.",
+    },
+    {
+      name: "브라질",
+      country: "브라질",
+      continent: "미주",
+      vibe: "열정 & 자연",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [12, 1, 2, 3],
+      goodMonths: [11, 4],
+      note: "리우 아마존.",
+    },
+    {
+      name: "아르헨티나",
+      country: "아르헨티나",
+      continent: "미주",
+      vibe: "탱고 & 자연",
+      budget: "높음(1000만원~)",
+      travelType: "관광",
+      bestMonths: [12, 1, 2, 3],
+      goodMonths: [11, 4],
+      note: "탱고 빙하.",
+    },
+    {
+      name: "세렝게티",
+      country: "탄자니아",
+      continent: "아프리카",
+      vibe: "사파리",
+      budget: "높음(1000만원~)",
+      travelType: "액티비티",
+      bestMonths: [6, 7, 8, 9, 10],
+      goodMonths: [1, 2],
+      note: "야생동물 사파리.",
+    },
+    {
+      name: "잔지바르",
+      country: "탄자니아",
+      continent: "아프리카",
+      vibe: "인도양 휴양",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "휴양",
+      bestMonths: [6, 7, 8, 9, 10],
+      goodMonths: [1, 2, 12],
+      note: "동부 해안 섬.",
+    },
+    {
+      name: "나이로비",
+      country: "케냐",
+      continent: "아프리카",
+      vibe: "사파리 & 문화",
+      budget: "높음(1000만원~)",
+      travelType: "액티비티",
+      bestMonths: [1, 2, 6, 7, 8, 9, 10],
+      goodMonths: [12],
+      note: "마사이마라.",
+    },
+    {
+      name: "카사블랑카",
+      country: "모로코",
+      continent: "아프리카",
+      vibe: "이슬람 & 해안",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [3, 4, 5, 10, 11],
+      goodMonths: [2, 9, 12],
+      note: "이슬람 문화.",
+    },
+    {
+      name: "마라케시",
+      country: "모로코",
+      continent: "아프리카",
+      vibe: "사막 & 바자르",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [3, 4, 5, 10, 11],
+      goodMonths: [2, 9],
+      note: "사하라 투어.",
+    },
+    {
+      name: "카이로",
+      country: "이집트",
+      continent: "아프리카",
+      vibe: "고대 문명",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [10, 11, 12, 1, 2, 3],
+      goodMonths: [4, 9],
+      note: "피라미드.",
+    },
+    {
+      name: "아스완·룩소르",
+      country: "이집트",
+      continent: "아프리카",
+      vibe: "나일강 유적",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "관광",
+      bestMonths: [10, 11, 12, 1, 2, 3],
+      goodMonths: [4, 9],
+      note: "나일강 크루즈.",
+    },
+    {
+      name: "후루가다",
+      country: "이집트",
+      continent: "아프리카",
+      vibe: "홍해 휴양",
+      budget: "중간(500만원 ~ 1000만원)",
+      travelType: "휴양",
+      bestMonths: [10, 11, 12, 1, 2, 3, 4],
+      goodMonths: [5, 9],
+      note: "홍해 다이빙.",
+    },
+    {
+      name: "모리셔스",
+      country: "모리셔스",
+      continent: "아프리카",
+      vibe: "인도양 낙원",
+      budget: "높음(1000만원~)",
+      travelType: "휴양",
+      bestMonths: [5, 6, 7, 8, 9, 10, 11],
+      goodMonths: [4, 12],
+      note: "럭셔리 리조트.",
+    },
+    {
+      name: "세이셸",
+      country: "세이셸",
+      continent: "아프리카",
+      vibe: "프라이빗 아일랜드",
+      budget: "높음(1000만원~)",
+      travelType: "휴양",
+      bestMonths: [4, 5, 10, 11],
+      goodMonths: [6, 9],
+      note: "세계 최고 해변.",
+    },
+  ];
+
+  const colors = {
+    primary: "#0265D2",
+    secondary: "#FFFFFF",
+    background: "#EAF2FF",
+    text: "#3B3B3B",
+    accent: "#FB8C00",
+    best: "#0265D2",
+    good: "#4CAF50",
+    info: "#6B6B6B",
+  };
+  function getCountryCode(country) {
+    const codes = {
+      인도네시아: "id",
+      태국: "th",
+      베트남: "vn",
+      일본: "jp",
+      필리핀: "ph",
+      말레이시아: "my",
+      아랍에미리트: "ae",
+      튀르키예: "tr",
+      몰디브: "mv",
+      싱가포르: "sg",
+      호주: "au",
+      "프렌치 폴리네시아": "pf",
+      뉴질랜드: "nz",
+      피지: "fj",
+      "뉴칼레도니아·바누아투": "nc",
+      프랑스: "fr",
+      이탈리아: "it",
+      스위스: "ch",
+      스페인: "es",
+      포르투갈: "pt",
+      독일: "de",
+      노르웨이: "no",
+      핀란드: "fi",
+      스웨덴: "se",
+      그리스: "gr",
+      영국: "gb",
+      체코: "cz",
+      크로아티아: "hr",
+      슬로베니아: "si",
+      덴마크: "dk",
+      미국: "us",
+      캐나다: "ca",
+      멕시코: "mx",
+      칠레: "cl",
+      페루: "pe",
+      바하마: "bs",
+      브라질: "br",
+      아르헨티나: "ar",
+      탄자니아: "tz",
+      케냐: "ke",
+      모로코: "ma",
+      이집트: "eg",
+      모리셔스: "mu",
+      세이셸: "sc",
     };
+    return codes[country] || "un";
+  }
 
-    const destinationsData = [
-        { name: '발리', country: '인도네시아', continent: '아시아', vibe: '럭셔리 휴양 & 힐링', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [4,5,6,7,8,9,10], goodMonths: [1,2,3,11,12], note: '건기인 4월~10월이 최적기. 우붓의 논 뷰 리조트와 스미냑의 비치 클럽 추천.' },
-        { name: '롬복', country: '인도네시아', continent: '아시아', vibe: '프라이빗 휴양', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [4,5,6,7,8,9,10], goodMonths: [1,2,3,11,12], note: '길리 섬(Gili Islands)에서의 스노클링 및 다이빙 명소. 발리보다 조용하고 프라이빗함.' },
-        { name: '몰디브', country: '몰디브', continent: '아시아', vibe: '궁극의 럭셔리', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [11,12,1,2,3], goodMonths: [4,10], note: '워터 빌라에서의 로맨틱한 경험. 섬마다 리조트 분위기가 다름.' },
-        { name: '푸켓·카오락', country: '태국', continent: '아시아', vibe: '가성비 & 액티비티', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [11,12,1,2,3], goodMonths: [4,10], note: '겨울철 건기가 가장 좋음. 빠통, 카론 등 지역별 특색 확인. 피피섬 투어 필수.' },
-        { name: '코사무이', country: '태국', continent: '아시아', vibe: '고요한 휴양', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [2,3,4], goodMonths: [1,5,12], note: '타이만의 아름다운 섬. 건기가 짧고 우기가 비교적 덜 심함.' },
-        { name: '방콕·치앙마이', country: '태국', continent: '아시아', vibe: '문화 & 미식', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [11,12,1,2], goodMonths: [3,10], note: '북부(치앙마이)와 수도(방콕)를 잇는 문화 체험 중심의 여행.' },
-        { name: '다낭·호이안', country: '베트남', continent: '아시아', vibe: '문화 & 비치', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [2,3,4,5,6], goodMonths: [1,7,8,9,11], note: '베트남 중부 최대의 해변 도시와 유네스코 세계문화유산 호이안의 조화' },
-        { name: '푸꾸옥', country: '베트남', continent: '아시아', vibe: '조용한 섬', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [11,12,1,2,3,4], goodMonths: [5,10], note: '베트남 최남단의 열대 섬. 아름다운 선셋과 프라이빗 리조트' },
-        { name: '나트랑', country: '베트남', continent: '아시아', vibe: '해양 스포츠', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [1,2,3,4,5], goodMonths: [6,11,12], note: '베트남의 대표적인 해양 휴양지. 스노클링과 머드 스파가 유명' },
-        { name: '도쿄·교토', country: '일본', continent: '아시아', vibe: '전통 & 현대', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [3,4,5,10,11], goodMonths: [2,6,9,12], note: '일본의 수도와 고도(古都)를 잇는 문화 여행. 벚꽃(3~4월)과 단풍(11월) 시즌 추천' },
-        { name: '삿포로', country: '일본', continent: '아시아', vibe: '설국 로맨스', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [7,8], goodMonths: [6,9,12,1,2], note: '여름은 시원하고 쾌적. 겨울은 눈 축제와 스키 명소' },
-        { name: '오키나와', country: '일본', continent: '아시아', vibe: '열대 해양', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [4,5,10,11], goodMonths: [3,6,12], note: '일본 최남단의 열대 섬. 에메랄드빛 바다와 산호초' },
-        { name: '홋카이도', country: '일본', continent: '아시아', vibe: '자연 & 온천', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [7,8], goodMonths: [6,9,12,1,2], note: '광활한 자연과 온천. 여름은 라벤더, 겨울은 설경과 스키' },
-        { name: '세부·보홀·보라카이', country: '필리핀', continent: '아시아', vibe: '해양 천국', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [12,1,2,3,4,5], goodMonths: [11,6], note: '필리핀의 대표적인 해양 휴양지. 세부는 다이빙, 보홀은 자연, 보라카이는 화이트비치가 유명' },
-        { name: '코타키나발루', country: '말레이시아', continent: '아시아', vibe: '자연 & 휴양', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [3,4,5,6,7,8], goodMonths: [2,9,10], note: '보르네오 섬의 관문. 키나발루 산과 석양이 아름다운 해변' },
-        { name: '랑카위', country: '말레이시아', continent: '아시아', vibe: '열대 섬', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [12,1,2,3], goodMonths: [11,4], note: '말레이시아 최북단의 면세 섬. 케이블카와 스카이브리지가 유명' },
-        { name: '두바이·아부다비', country: '아랍에미리트', continent: '아시아', vibe: '럭셔리 & 사막', budget: '높음(1000만원~)', travelType: '관광+휴양', bestMonths: [11,12,1,2,3], goodMonths: [4,10], note: '사막 사파리와 쇼핑.' },
-        { name: '이스탄불', country: '튀르키예', continent: '아시아', vibe: '동서양 문화', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [4,5,9,10], goodMonths: [3,6,11], note: '모스크와 바자르.' },
-        { name: '싱가포르', country: '싱가포르', continent: '아시아', vibe: '도시 & 미식', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [2,3,4,7,8], goodMonths: [1,5,6,9,10,11,12], note: '도시국가의 완벽한 인프라. 마리나베이샌즈와 가든스바이더베이 필수 코스' },
-        { name: '싱가포르', country: '싱가포르', continent: '아시아', vibe: '쇼핑 & 테마파크', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [2,3,7,8,9], goodMonths: [1,4,5,6,10,11,12], note: '유니버셜 스튜디오와 센토사 섬에서의 즐거움' },
-        { name: '시드니', country: '호주', continent: '오세아니아', vibe: '도시 & 자연', budget: '높음(1000만원~)', travelType: '관광+휴양', bestMonths: [12,1,2], goodMonths: [3,11], note: '남반구 여름 최적.' },
-        { name: '타히티', country: '프렌치 폴리네시아', continent: '오세아니아', vibe: '열대 낙원', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [5,6,7,8,9,10], goodMonths: [4,11], note: '오버워터 방갈로.' },
-        { name: '뉴질랜드', country: '뉴질랜드', continent: '오세아니아', vibe: '어드벤처', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [1,2,3], goodMonths: [12,4], note: '퀸스타운 번지점프.' },
-        { name: '피지', country: '피지', continent: '오세아니아', vibe: '열대 섬', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [5,6,7,8,9,10], goodMonths: [4,11], note: '남태평양의 보석.' },
-        { name: '뉴칼레도니아·바누아투', country: '뉴칼레도니아·바누아투', continent: '오세아니아', vibe: '미지의 열대', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [9,10,11], goodMonths: [4,5,8], note: '원시적 자연.' },
-        { name: '북부·중부·서부', country: '프랑스', continent: '유럽', vibe: '클래식 로맨스', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [5,6,9,10], goodMonths: [4,7], note: '에펠탑, 루브르.' },
-        { name: '남부', country: '프랑스', continent: '유럽', vibe: '지중해 휴양', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [5,6,7,8,9], goodMonths: [4,10], note: '프로방스와 코트다쥐르.' },
-        { name: '북부', country: '이탈리아', continent: '유럽', vibe: '예술 & 역사', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [5,6,9,10], goodMonths: [4,7], note: '베네치아, 밀라노.' },
-        { name: '중부', country: '이탈리아', continent: '유럽', vibe: '르네상스', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [4,5,6,9,10], goodMonths: [3,11], note: '로마, 피렌체.' },
-        { name: '남부', country: '이탈리아', continent: '유럽', vibe: '해안 & 열정', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [5,6,7,8,9], goodMonths: [4,10], note: '아말피 해안.' },
-        { name: '북부·중부', country: '스위스', continent: '유럽', vibe: '알프스', budget: '높음(1000만원~)', travelType: '관광+휴양', bestMonths: [6,7,8,9], goodMonths: [5,10], note: '산악 열차 코스.' },
-        { name: '남부·알프스', country: '스위스', continent: '유럽', vibe: '산악 리조트', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [12,1,2,3], goodMonths: [6,7,8], note: '스키 천국.' },
-        { name: '북부', country: '스페인', continent: '유럽', vibe: '해안 & 미식', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [5,6,9,10], goodMonths: [4,7,8], note: '바르셀로나 가우디.' },
-        { name: '중부', country: '스페인', continent: '유럽', vibe: '역사 & 문화', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [4,5,6,9,10], goodMonths: [3,11], note: '마드리드 플라멩코.' },
-        { name: '남부', country: '스페인', continent: '유럽', vibe: '안달루시아', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [4,5,6,9,10], goodMonths: [3,11], note: '세비야 그라나다.' },
-        { name: '카나리아 제도', country: '스페인', continent: '유럽', vibe: '아열대 섬', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [1,2,3,4,5,11,12], goodMonths: [6,10], note: '연중 온화한 기후.' },
-        { name: '북부', country: '포르투갈', continent: '유럽', vibe: '포트와인', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [5,6,9,10], goodMonths: [4,7], note: '포르투 와인 투어.' },
-        { name: '중부·남부', country: '포르투갈', continent: '유럽', vibe: '수도 & 해안', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [4,5,6,9,10], goodMonths: [3,11], note: '리스본 알가르브.' },
-        { name: '마데이라 제도', country: '포르투갈', continent: '유럽', vibe: '아열대 섬', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [4,5,6,9,10], goodMonths: [3,7,11], note: '대서양의 진주.' },
-        { name: '북부·서부', country: '독일', continent: '유럽', vibe: '성 & 문화', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [5,6,7,8,9], goodMonths: [4,10], note: '노이슈반슈타인.' },
-        { name: '남부', country: '독일', continent: '유럽', vibe: '알프스 & 맥주', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [6,7,8,9], goodMonths: [5,10], note: '뮌헨 남부 알프스.' },
-        { name: '남부', country: '노르웨이', continent: '유럽', vibe: '피오르', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [5,6,7,8], goodMonths: [9], note: '송네 피오르.' },
-        { name: '중부', country: '노르웨이', continent: '유럽', vibe: '산악 & 전통', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [6,7,8], goodMonths: [5,9], note: '베르겐 중부.' },
-        { name: '북부', country: '노르웨이', continent: '유럽', vibe: '백야 & 오로라', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [12,1,2,6,7], goodMonths: [3,5,8], note: '백야와 오로라.' },
-        { name: '남부', country: '핀란드', continent: '유럽', vibe: '호수 & 자연', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [6,7,8], goodMonths: [5,9], note: '헬싱키 호수.' },
-        { name: '중부', country: '핀란드', continent: '유럽', vibe: '숲 & 호수', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [6,7,8], goodMonths: [5,9], note: '중부 숲과 호수.' },
-        { name: '북부', country: '핀란드', continent: '유럽', vibe: '오로라 & 사미', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [12,1,2,3], goodMonths: [6,7,8], note: '라플란드 오로라.' },
-        { name: '남부·중부', country: '스웨덴', continent: '유럽', vibe: '수도 & 문화', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [6,7,8], goodMonths: [5,9], note: '스톡홀름.' },
-        { name: '북부', country: '스웨덴', continent: '유럽', vibe: '백야 & 자연', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [6,7,8], goodMonths: [5,9], note: '북부 백야.' },
-        { name: '그리스', country: '그리스', continent: '유럽', vibe: '신화 & 바다', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [5,6,9], goodMonths: [4,7,8,10], note: '산토리니 일몰.' },
-        { name: '영국', country: '영국', continent: '유럽', vibe: '클래식', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [6,7,8], goodMonths: [5,9], note: '런던 박물관.' },
-        { name: '체코', country: '체코', continent: '유럽', vibe: '중세 & 낭만', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [5,6,9], goodMonths: [4,7,8,10], note: '프라하 구시가.' },
-        { name: '크로아티아', country: '크로아티아', continent: '유럽', vibe: '아드리아해', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [6,9], goodMonths: [5,7,8,10], note: '두브로브니크.' },
-        { name: '슬로베니아', country: '슬로베니아', continent: '유럽', vibe: '동화 자연', budget: '중간(500만원 ~ 1000만원)', travelType: '관광+휴양', bestMonths: [6,7,8], goodMonths: [5,9], note: '블레드 호수.' },
-        { name: '덴마크', country: '덴마크', continent: '유럽', vibe: '동화 & 디자인', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [6,7,8], goodMonths: [5,9], note: '코펜하겐.' },
-        { name: '서부', country: '미국', continent: '미주', vibe: '대자연 & 도시', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [4,5,6,9,10], goodMonths: [3,7,8], note: 'SF, LA, 그랜드캐니언.' },
-        { name: '동부', country: '미국', continent: '미주', vibe: '도시 & 문화', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [4,5,6,9,10], goodMonths: [3,11], note: '뉴욕 보스턴.' },
-        { name: '하와이', country: '미국', continent: '미주', vibe: '다이나믹', budget: '높음(1000만원~)', travelType: '관광+휴양', bestMonths: [4,5,9,10], goodMonths: [3,6,11], note: '오아후 빅아일랜드.' },
-        { name: '괌·사이판', country: '미국', continent: '미주', vibe: '가까운 휴양', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [12,1,2,3,4], goodMonths: [5,11], note: '미국령 열대.' },
-        { name: '서부·동부', country: '캐나다', continent: '미주', vibe: '대자연 & 도시', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [6,7,8,9], goodMonths: [5,10], note: '밴쿠버 토론토.' },
-        { name: '중부', country: '캐나다', continent: '미주', vibe: '자연 & 호수', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [6,7,8], goodMonths: [5,9], note: '중부 자연.' },
-        { name: '칸쿤', country: '멕시코', continent: '미주', vibe: '카리브해', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [12,1,2,3,4], goodMonths: [5,11], note: '카리브 바다.' },
-        { name: '칠레', country: '칠레', continent: '미주', vibe: '남미 대자연', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [12,1,2,3], goodMonths: [11,4], note: '파타고니아.' },
-        { name: '페루', country: '페루', continent: '미주', vibe: '잉카 문명', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [5,6,7,8,9], goodMonths: [4,10], note: '마추픽추.' },
-        { name: '바하마', country: '바하마', continent: '미주', vibe: '카리브 낙원', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [12,1,2,3,4], goodMonths: [5,11], note: '핑크샌드 비치.' },
-        { name: '브라질', country: '브라질', continent: '미주', vibe: '열정 & 자연', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [12,1,2,3], goodMonths: [11,4], note: '리우 아마존.' },
-        { name: '아르헨티나', country: '아르헨티나', continent: '미주', vibe: '탱고 & 자연', budget: '높음(1000만원~)', travelType: '관광', bestMonths: [12,1,2,3], goodMonths: [11,4], note: '탱고 빙하.' },
-        { name: '세렝게티', country: '탄자니아', continent: '아프리카', vibe: '사파리', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [6,7,8,9,10], goodMonths: [1,2], note: '야생동물 사파리.' },
-        { name: '잔지바르', country: '탄자니아', continent: '아프리카', vibe: '인도양 휴양', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [6,7,8,9,10], goodMonths: [1,2,12], note: '동부 해안 섬.' },
-        { name: '나이로비', country: '케냐', continent: '아프리카', vibe: '사파리 & 문화', budget: '높음(1000만원~)', travelType: '액티비티', bestMonths: [1,2,6,7,8,9,10], goodMonths: [12], note: '마사이마라.' },
-        { name: '카사블랑카', country: '모로코', continent: '아프리카', vibe: '이슬람 & 해안', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [3,4,5,10,11], goodMonths: [2,9,12], note: '이슬람 문화.' },
-        { name: '마라케시', country: '모로코', continent: '아프리카', vibe: '사막 & 바자르', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [3,4,5,10,11], goodMonths: [2,9], note: '사하라 투어.' },
-        { name: '카이로', country: '이집트', continent: '아프리카', vibe: '고대 문명', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [10,11,12,1,2,3], goodMonths: [4,9], note: '피라미드.' },
-        { name: '아스완·룩소르', country: '이집트', continent: '아프리카', vibe: '나일강 유적', budget: '중간(500만원 ~ 1000만원)', travelType: '관광', bestMonths: [10,11,12,1,2,3], goodMonths: [4,9], note: '나일강 크루즈.' },
-        { name: '후루가다', country: '이집트', continent: '아프리카', vibe: '홍해 휴양', budget: '중간(500만원 ~ 1000만원)', travelType: '휴양', bestMonths: [10,11,12,1,2,3,4], goodMonths: [5,9], note: '홍해 다이빙.' },
-        { name: '모리셔스', country: '모리셔스', continent: '아프리카', vibe: '인도양 낙원', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [5,6,7,8,9,10,11], goodMonths: [4,12], note: '럭셔리 리조트.' },
-        { name: '세이셸', country: '세이셸', continent: '아프리카', vibe: '프라이빗 아일랜드', budget: '높음(1000만원~)', travelType: '휴양', bestMonths: [4,5,10,11], goodMonths: [6,9], note: '세계 최고 해변.' }
-    ];
+  let currentView = "intro";
+  let currentUserId = null;
+  let notificationTimeout = null;
+  let selectedMonth = 0;
+  let selectedContinent = "모두";
+  let selectedBudget = "모두";
+  let selectedPurpose = "모두";
+  let isFiltered = false;
 
-    const colors = { primary: '#F48FB1', secondary: '#FFFFFF', background: '#FFF3E0', text: '#424242', accent: '#FFC107', best: '#4FC3F7', good: '#FFEE58', info: '#66BB6A' };
-
-    function getCountryCode(country) {
-        const codes = {
-            '인도네시아': 'id', '태국': 'th', '베트남': 'vn', '일본': 'jp', '필리핀': 'ph', '말레이시아': 'my',
-            '아랍에미리트': 'ae', '튀르키예': 'tr', '몰디브': 'mv', '싱가포르': 'sg', '호주': 'au', '프렌치 폴리네시아': 'pf',
-            '뉴질랜드': 'nz', '피지': 'fj', '뉴칼레도니아·바누아투': 'nc', '프랑스': 'fr', '이탈리아': 'it', '스위스': 'ch',
-            '스페인': 'es', '포르투갈': 'pt', '독일': 'de', '노르웨이': 'no', '핀란드': 'fi', '스웨덴': 'se',
-            '그리스': 'gr', '영국': 'gb', '체코': 'cz', '크로아티아': 'hr', '슬로베니아': 'si', '덴마크': 'dk',
-            '미국': 'us', '캐나다': 'ca', '멕시코': 'mx', '칠레': 'cl', '페루': 'pe', '바하마': 'bs', '브라질': 'br',
-            '아르헨티나': 'ar', '탄자니아': 'tz', '케냐': 'ke', '모로코': 'ma', '이집트': 'eg', '모리셔스': 'mu', '세이셸': 'sc'
-        };
-        return codes[country] || 'un';
-    }
-
-    let currentView = 'intro';
-    let currentUserId = null;
-    let notificationTimeout = null;
-    let selectedMonth = 0;
-    let selectedContinent = '모두';
-    let selectedBudget = '모두';
-    let selectedPurpose = '모두';
-    let isFiltered = false;
-
-    function showMapModal(dest) {
-        const modal = document.createElement('div');
-        modal.className = 'modal active';
-        modal.innerHTML = `
+  function showMapModal(dest) {
+    const modal = document.createElement("div");
+    modal.className = "modal active";
+    modal.innerHTML = `
             <div class="modal-content">
                 <div class="map-container">
                     <iframe width="100%" height="100%" frameborder="0" style="border:0" 
-                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(dest.name + ', ' + dest.country)}&zoom=10" 
+                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
+                          dest.name + ", " + dest.country
+                        )}&zoom=10" 
                         allowfullscreen></iframe>
                 </div>
                 <div class="p-6">
-                    <h3 class="text-2xl font-bold mb-4" style="color: ${colors.primary};">${dest.name}, ${dest.country}</h3>
+                    <h3 class="text-2xl font-bold mb-4" style="color: ${
+                      colors.primary
+                    };">${dest.name}, ${dest.country}</h3>
                     <div class="flex items-center mb-4">
-                        <i data-lucide="plane" class="w-5 h-5 mr-2" style="color: ${colors.accent};"></i>
-                        <p class="text-lg"><strong>서울(인천)에서 비행시간:</strong> <span style="color: ${colors.primary};">${flightTimes[dest.country] || '정보 없음'}</span></p>
+                        <i data-lucide="plane" class="w-5 h-5 mr-2" style="color: ${
+                          colors.accent
+                        };"></i>
+                        <p class="text-lg"><strong>서울(인천)에서 비행시간:</strong> <span style="color: ${
+                          colors.primary
+                        };">${
+      flightTimes[dest.country] || "정보 없음"
+    }</span></p>
                     </div>
                     <p class="text-gray-600 mb-4">${dest.note}</p>
-                    <button onclick="closeModal()" class="w-full bg-primary text-white font-bold py-3 px-6 rounded-xl hover:opacity-90 transition" style="background-color: ${colors.primary};">닫기</button>
+                    <button onclick="closeModal()" class="w-full bg-primary text-white font-bold py-3 px-6 rounded-xl hover:opacity-90 transition" style="background-color: ${
+                      colors.primary
+                    };">닫기</button>
                 </div>
             </div>
         `;
-        document.body.appendChild(modal);
-        modal.onclick = (e) => { if (e.target === modal) closeModal(); };
-        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-    }
-
-    window.closeModal = function() {
-        const modal = document.querySelector('.modal');
-        if (modal) modal.remove();
+    document.body.appendChild(modal);
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
     };
+    if (typeof lucide !== "undefined" && lucide.createIcons)
+      lucide.createIcons();
+  }
 
-    function renderApp() {
-        const root = document.getElementById('root');
-        root.className = "p-4 md:p-8 min-h-screen";
-        root.style.backgroundColor = colors.background;
-        root.style.color = colors.text;
-        root.innerHTML = `<main class="max-w-7xl mx-auto">${renderHeader()}${currentView === 'intro' ? renderIntroPage() : renderGuidePage()}</main>`;
-        attachEventListeners();
-        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-    }
+  window.closeModal = function () {
+    const modal = document.querySelector(".modal");
+    if (modal) modal.remove();
+  };
 
-    function setView(viewName) { currentView = viewName; renderApp(); }
+  function renderApp() {
+    const root = document.getElementById("root");
+    root.className = "p-4 md:p-8 min-h-screen";
+    root.style.backgroundColor = colors.background;
+    root.style.color = colors.text;
+    root.innerHTML = `<main class="max-w-7xl mx-auto">${renderHeader()}${
+      currentView === "intro" ? renderIntroPage() : renderGuidePage()
+    }</main>`;
+    attachEventListeners();
+    if (typeof lucide !== "undefined" && lucide.createIcons)
+      lucide.createIcons();
+  }
 
-    function renderHeader() {
-        const titleColor = currentView === 'intro' ? colors.text : colors.primary;
-        return `<header class="text-center mb-10 p-6 bg-white rounded-3xl shadow-2xl border-b-8 border-r-4" style="border-color: ${colors.primary}AA;">
+  function setView(viewName) {
+    currentView = viewName;
+    renderApp();
+  }
+
+  function renderHeader() {
+    const titleColor = currentView === "intro" ? colors.text : colors.primary;
+    return `<header class="text-center mb-10 p-6 bg-white rounded-3xl shadow-2xl border-b-8 border-r-4" style="border-color: ${
+      colors.primary
+    }AA;">
             <h1 id="header-title" class="text-4xl md:text-6xl font-black tracking-tight mb-2 cursor-pointer transition duration-200 hover:text-primary" style="color: ${titleColor};">
-                <i data-lucide="map-pin" class='inline-block w-8 h-8 md:w-10 md:h-10 mr-3 align-text-bottom' style='color: ${colors.primary}; fill: ${colors.primary}33;'></i>
-                로맨틱 허니문 가이드
+                <i data-lucide="map-pin" class='inline-block w-8 h-8 md:w-10 md:h-10 mr-3 align-text-bottom' style='color: ${
+                  colors.primary
+                }; fill: ${colors.primary}33;'></i>
+                온라인 허니문 플래너
             </h1>
-            <p class="text-lg md:text-2xl font-medium" style="color: ${colors.primary};">${currentView === 'intro' ? '두 분만을 위한 완벽한 여행지를 찾아보세요 💍' : '여행지 필터링 및 추천 가이드 🗺️'}</p>
+            <p class="text-lg md:text-2xl font-medium" style="color: ${
+              colors.primary
+            };">${
+      currentView === "intro"
+        ? "두 분만을 위한 완벽한 여행지를 찾아보세요 💍"
+        : "여행지 필터링 및 추천 가이드 🗺️"
+    }</p>
         </header>`;
-    }
+  }
 
-    function renderIntroPage() {
-        return `<div class="flex flex-col items-center justify-center min-h-[70vh] text-center p-8">
+  function renderIntroPage() {
+    return `<div class="flex flex-col items-center justify-center min-h-[70vh] text-center p-8">
             <i data-lucide="plane" class="w-16 h-16 mb-6 animate-bounce-slow" style="color: ${colors.primary}; stroke-width: 1.5;"></i>
-            <p class="text-2xl md:text-3xl font-semibold mb-3" style="color: ${colors.info};">똑딱부부 💑가 안내하는 로맨틱 여행</p>
+            <p class="text-2xl md:text-3xl font-semibold mb-3" style="color: ${colors.info};">똑딱부부💑가 안내하는 로맨틱 여행</p>
             <h2 class="text-5xl md:text-7xl font-black text-gray-800 tracking-tight mb-8">✈️ 허니문, 어디로 떠날까요? 🌍</h2>
             <p class="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl font-light">두 분의 스타일(휴양 vs. 액티비티), 원하는 시기, 그리고 예산을 고려한 <span class='font-semibold' style="color: ${colors.primary};">가장 완벽한 신혼여행지</span>를 찾아 드립니다.</p>
             <button id="start-button" class="bg-primary text-white font-extrabold text-xl py-4 px-12 rounded-full shadow-xl hover:bg-opacity-90 transition duration-300 transform hover:scale-[1.05] active:scale-95 border-b-4 border-primary/80" style="background-color: ${colors.primary}; border-color: ${colors.primary}CC;">
                 <i data-lucide="search" class="w-6 h-6 inline-block mr-3"></i>나만의 여행지 추천받기
             </button>
         </div>`;
-    }
+  }
 
-    function renderDestinationCard(dest) {
-        const isBest = selectedMonth !== 0 && dest.bestMonths.includes(selectedMonth);
-        const budgetColor = dest.budget.startsWith('높음') ? colors.primary : colors.text;
-        return `<div class="card bg-white rounded-3xl shadow-2xl overflow-hidden transition duration-300 transform hover:scale-[1.03] ${isBest ? 'border-4' : 'border-gray-50'}" style="${isBest ? 'border-color: ' + colors.best : ''};">
+  function renderDestinationCard(dest) {
+    const isBest =
+      selectedMonth !== 0 && dest.bestMonths.includes(selectedMonth);
+    const budgetColor = dest.budget.startsWith("높음")
+      ? colors.primary
+      : colors.text;
+    return `<div class="card bg-white rounded-3xl shadow-2xl overflow-hidden transition duration-300 transform hover:scale-[1.03] ${
+      isBest ? "border-4" : "border-gray-50"
+    }" style="${isBest ? "border-color: " + colors.best : ""};">
             <div class="flex justify-between items-center px-6 pt-4 pb-2 bg-gray-50/50">
                 <i data-lucide="cloud" class="w-5 h-5 text-gray-400"></i>
-                <h3 class="text-xs font-medium uppercase" style="color: ${colors.primary};">${dest.continent} 허니문</h3>
-                <i data-lucide="plane" class="w-5 h-5 -rotate-45" style="color: ${colors.primary}; fill: ${colors.primary}33;"></i>
+                <h3 class="text-xs font-medium uppercase" style="color: ${
+                  colors.primary
+                };">${dest.continent} 허니문</h3>
+                <i data-lucide="plane" class="w-5 h-5 -rotate-45" style="color: ${
+                  colors.primary
+                }; fill: ${colors.primary}33;"></i>
             </div>
-            <div class="p-6 pb-4 border-b border-gray-100 ${isBest ? 'bg-best/10' : ''}" style="${isBest ? 'background-color: ' + colors.best + '1A' : ''};">
+            <div class="p-6 pb-4 border-b border-gray-100 ${
+              isBest ? "bg-best/10" : ""
+            }" style="${
+      isBest ? "background-color: " + colors.best + "1A" : ""
+    };">
                 <h2 class="text-3xl font-black text-gray-900 mb-1 flex items-center">
-                    <img src="https://flagcdn.com/w40/${getCountryCode(dest.country)}.png" alt="${dest.country} 국기" class="w-8 h-6 mr-3 rounded shadow-sm" onerror="this.style.display='none'">
-                    <span onclick="showMapModal(${JSON.stringify(dest).replace(/"/g, '&quot;')})" class="cursor-pointer hover:underline">${dest.name}</span>
+                    <img src="https://flagcdn.com/w40/${getCountryCode(
+                      dest.country
+                    )}.png" alt="${
+      dest.country
+    } 국기" class="w-8 h-6 mr-3 rounded shadow-sm" onerror="this.style.display='none'">
+                    <span onclick="showMapModal(${JSON.stringify(dest).replace(
+                      /"/g,
+                      "&quot;"
+                    )})" class="cursor-pointer hover:underline">${
+      dest.name
+    }</span>
                 </h2>
-                <span class="ml-9 text-base font-normal text-gray-500">${dest.country}</span>
+                <span class="ml-9 text-base font-normal text-gray-500">${
+                  dest.country
+                }</span>
             </div>
             <div class="p-6 space-y-5">
-                <div class="flex items-start"><i data-lucide="heart" class="w-5 h-5 flex-shrink-0 mt-1 mr-3 fill-current" style="color: ${colors.info}; fill: ${colors.info};"></i>
-                    <div><p class="text-sm font-semibold text-gray-700">여행 분위기</p><p class="text-base text-gray-900 font-medium">${dest.vibe} <span class='text-sm italic'>(${dest.travelType})</span></p></div>
+                <div class="flex items-start"><i data-lucide="heart" class="w-5 h-5 flex-shrink-0 mt-1 mr-3 fill-current" style="color: ${
+                  colors.info
+                }; fill: ${colors.info};"></i>
+                    <div><p class="text-sm font-semibold text-gray-700">여행 분위기</p><p class="text-base text-gray-900 font-medium">${
+                      dest.vibe
+                    } <span class='text-sm italic'>(${
+      dest.travelType
+    })</span></p></div>
                 </div>
-                <div class="flex items-start"><i data-lucide="wallet" class="w-5 h-5 flex-shrink-0 mt-1 mr-3 fill-current" style="color: ${colors.accent}; fill: ${colors.accent};"></i>
-                    <div><p class="text-sm font-semibold text-gray-700">예상 예산대 (7일/2인 기준)</p><p class="text-lg font-extrabold" style="color: ${budgetColor};">${dest.budget} <span class="text-xs text-gray-500">(항공, 숙소, 식비 포함 추정치)</span></p></div>
+                <div class="flex items-start"><i data-lucide="wallet" class="w-5 h-5 flex-shrink-0 mt-1 mr-3 fill-current" style="color: ${
+                  colors.accent
+                }; fill: ${colors.accent};"></i>
+                    <div><p class="text-sm font-semibold text-gray-700">예상 예산대 (7일/2인 기준)</p><p class="text-lg font-extrabold" style="color: ${budgetColor};">${
+      dest.budget
+    } <span class="text-xs text-gray-500">(항공, 숙소, 식비 포함 추정치)</span></p></div>
                 </div>
                 <div class="flex items-start border-t pt-4 border-gray-100"><i data-lucide="message-square" class="w-5 h-5 text-gray-500 flex-shrink-0 mt-1 mr-3"></i>
-                    <div><p class="text-sm font-semibold text-gray-700">똑딱부부 Tip</p><p class="text-sm text-gray-600 italic">${dest.note}</p></div>
+                    <div><p class="text-sm font-semibold text-gray-700">똑딱부부 Tip</p><p class="text-sm text-gray-600 italic">${
+                      dest.note
+                    }</p></div>
                 </div>
             </div>
             <div class="p-6 pt-4 bg-gray-50/50 border-t border-gray-100">
                 <p class="text-xs font-medium text-gray-500 mb-1">BEST & GOOD 시즌:</p>
                 <div class="flex flex-wrap gap-2">
-                    ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
-                        let tagClass = 'bg-gray-100 text-gray-600';
-                        let tagStyle = '';
-                        if (dest.bestMonths.includes(m)) { tagClass = 'text-white font-bold shadow-sm'; tagStyle = `background-color: ${colors.best};`; }
-                        else if (dest.goodMonths.includes(m)) { tagClass = 'text-gray-800 font-medium'; tagStyle = `background-color: ${colors.good}CC;`; }
+                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                      .map((m) => {
+                        let tagClass = "bg-gray-100 text-gray-600";
+                        let tagStyle = "";
+                        if (dest.bestMonths.includes(m)) {
+                          tagClass = "text-white font-bold shadow-sm";
+                          tagStyle = `background-color: ${colors.best};`;
+                        } else if (dest.goodMonths.includes(m)) {
+                          tagClass = "text-gray-800 font-medium";
+                          tagStyle = `background-color: ${colors.good}CC;`;
+                        }
                         return `<span class="text-xs py-1 px-3 rounded-full ${tagClass}" style="${tagStyle}">${m}월</span>`;
-                    }).join('')}
+                      })
+                      .join("")}
                 </div>
             </div>
         </div>`;
-    }
+  }
 
-    function renderGuidePage() {
-        const filterAndSortDestinations = () => {
-            if (!isFiltered) return destinationsData;
-            let list = destinationsData.filter(dest => {
-                const monthMatch = selectedMonth === 0 || dest.bestMonths.includes(selectedMonth) || dest.goodMonths.includes(selectedMonth);
-                const continentMatch = selectedContinent === '모두' || dest.continent === selectedContinent;
-                const budgetMatch = selectedBudget === '모두' || dest.budget.includes(selectedBudget === '낮음' ? '500만원 이하' : selectedBudget === '중간' ? '500만원 ~ 1000만원' : '1000만원~');
-                const purposeMatch = selectedPurpose === '모두' || dest.travelType.includes(selectedPurpose);
-                return monthMatch && continentMatch && budgetMatch && purposeMatch;
-            });
-            if (selectedMonth !== 0) list.sort((a, b) => { const isABest = a.bestMonths.includes(selectedMonth); const isBBest = b.bestMonths.includes(selectedMonth); return isABest && !isBBest ? -1 : !isABest && isBBest ? 1 : a.name.localeCompare(b.name, 'ko'); });
-            return list;
-        };
-        const filteredDestinations = filterAndSortDestinations();
-        let content = !isFiltered ? `<div class="col-span-full text-center text-gray-500 p-12 bg-white rounded-2xl shadow-inner border-dashed border-2 border-gray-200"><i data-lucide="globe" class='w-12 h-12 mx-auto mb-4' style='color: ${colors.info};'></i><p class="text-xl font-semibold mb-2" style="color: ${colors.text};">필터를 선택하고 '여행지 검색' 버튼을 눌러보세요!</p><p class="text-gray-500">두 분이 꿈꾸는 완벽한 여행지를 찾아드립니다 ✨</p></div>` :
-            filteredDestinations.length === 0 ? `<div class="col-span-full text-center p-12 bg-white rounded-2xl shadow-inner border-dashed border-2" style="border-color: ${colors.primary}80;"><i data-lucide="cloud-off" class='w-12 h-12 mx-auto mb-4' style='color: ${colors.primary};'></i><p class="text-xl font-semibold mb-2" style="color: ${colors.primary};">😭 아쉽게도 해당 조건에 맞는 추천 여행지가 없습니다.</p><p class="text-gray-600">다른 달이나 대륙을 선택하여 로맨틱한 여행지를 다시 찾아보세요!</p></div>` :
-            filteredDestinations.map(renderDestinationCard).join('');
-        return `<div id="filter-bar" class="bg-white p-6 rounded-2xl shadow-xl mb-10 flex flex-col md:flex-row gap-4 items-center justify-between border-b-4" style="border-color: ${colors.primary}AA;">
-            <div class="w-full md:w-auto flex-grow"><label for="month-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${colors.text};">여행 희망 월 선택</label>
-                <select id="month-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${colors.primary}55; background-color: ${colors.secondary};">
-                    <option value="0">-- 모든 월 보기 📅 --</option>${[...Array(12).keys()].map(i => `<option value="${i+1}" ${selectedMonth === i+1 ? 'selected' : ''}>${i+1}월</option>`).join('')}
+  function renderGuidePage() {
+    const filterAndSortDestinations = () => {
+      if (!isFiltered) return destinationsData;
+      let list = destinationsData.filter((dest) => {
+        const monthMatch =
+          selectedMonth === 0 ||
+          dest.bestMonths.includes(selectedMonth) ||
+          dest.goodMonths.includes(selectedMonth);
+        const continentMatch =
+          selectedContinent === "모두" || dest.continent === selectedContinent;
+        const budgetMatch =
+          selectedBudget === "모두" ||
+          dest.budget.includes(
+            selectedBudget === "낮음"
+              ? "~500만원"
+              : selectedBudget === "중간"
+              ? "500만원 ~ 800만원"
+              : selectedBudget === "높음"
+              ? "800만원 ~ 1200만원"
+              : "1200만원"
+          );
+        const purposeMatch =
+          selectedPurpose === "모두" ||
+          dest.travelType.includes(selectedPurpose);
+        return monthMatch && continentMatch && budgetMatch && purposeMatch;
+      });
+      if (selectedMonth !== 0)
+        list.sort((a, b) => {
+          const isABest = a.bestMonths.includes(selectedMonth);
+          const isBBest = b.bestMonths.includes(selectedMonth);
+          return isABest && !isBBest
+            ? -1
+            : !isABest && isBBest
+            ? 1
+            : a.name.localeCompare(b.name, "ko");
+        });
+      return list;
+    };
+    const filteredDestinations = filterAndSortDestinations();
+    let content = !isFiltered
+      ? `<div class="col-span-full text-center text-gray-500 p-12 bg-white rounded-2xl shadow-inner border-dashed border-2 border-gray-200"><i data-lucide="globe" class='w-12 h-12 mx-auto mb-4' style='color: ${colors.info};'></i><p class="text-xl font-semibold mb-2" style="color: ${colors.text};">필터를 선택하고 '여행지 검색' 버튼을 눌러보세요!</p><p class="text-gray-500">두 분이 꿈꾸는 완벽한 여행지를 찾아드립니다 ✨</p></div>`
+      : filteredDestinations.length === 0
+      ? `<div class="col-span-full text-center p-12 bg-white rounded-2xl shadow-inner border-dashed border-2" style="border-color: ${colors.primary}80;"><i data-lucide="cloud-off" class='w-12 h-12 mx-auto mb-4' style='color: ${colors.primary};'></i><p class="text-xl font-semibold mb-2" style="color: ${colors.primary};">😭 아쉽게도 해당 조건에 맞는 추천 여행지가 없습니다.</p><p class="text-gray-600">다른 달이나 대륙을 선택하여 로맨틱한 여행지를 다시 찾아보세요!</p></div>`
+      : filteredDestinations.map(renderDestinationCard).join("");
+    return `<div id="filter-bar" class="bg-white p-6 rounded-2xl shadow-xl mb-10 flex flex-col md:flex-row gap-2 items-center justify-between border-b-4" style="border-color: ${
+      colors.primary
+    }AA;">
+            <div class="w-full md:w-auto flex-grow"><label for="month-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+              colors.text
+            };">여행 희망 달</label>
+                <select id="month-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                  colors.primary
+                }55; background-color: ${colors.secondary};">
+                    <option value="0">-- 모든 달 📅 --</option>${[
+                      ...Array(12).keys(),
+                    ]
+                      .map(
+                        (i) =>
+                          `<option value="${i + 1}" ${
+                            selectedMonth === i + 1 ? "selected" : ""
+                          }>${i + 1}월</option>`
+                      )
+                      .join("")}
                 </select>
             </div>
-            <div class="w-full md:w-auto flex-grow"><label for="continent-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${colors.text};">대륙 선택</label>
-                <select id="continent-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${colors.primary}55; background-color: ${colors.secondary};">
-                    <option value="모두">-- 모든 대륙 보기 🌎 --</option>${['아시아', '오세아니아', '유럽', '미주', '아프리카'].map(c => `<option value="${c}" ${selectedContinent === c ? 'selected' : ''}>${c}</option>`).join('')}
+            <div class="w-full md:w-auto flex-grow"><label for="continent-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+              colors.text
+            };">대륙</label>
+                <select id="continent-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                  colors.primary
+                }55; background-color: ${colors.secondary};">
+                    <option value="모두">-- 모든 대륙 🌎 --</option>${[
+                      "아시아",
+                      "오세아니아",
+                      "유럽",
+                      "미주",
+                      "아프리카",
+                    ]
+                      .map(
+                        (c) =>
+                          `<option value="${c}" ${
+                            selectedContinent === c ? "selected" : ""
+                          }>${c}</option>`
+                      )
+                      .join("")}
                 </select>
             </div>
-            <div class="w-full md:w-auto flex-grow"><label for="budget-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${colors.text};">예산대 선택</label>
-                <select id="budget-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${colors.primary}55; background-color: ${colors.secondary};">
-                    <option value="모두">-- 모든 예산 💰 --</option>${['낮음', '중간', '높음'].map(b => `<option value="${b}" ${selectedBudget === b ? 'selected' : ''}>${b}</option>`).join('')}
+            <div class="w-full md:w-auto flex-grow"><label for="budget-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+              colors.text
+            };">예산대</label>
+                <select id="budget-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                  colors.primary
+                }55; background-color: ${colors.secondary};">
+                    <option value="모두">-- 모든 예산대 💰 --</option>${[
+                      "낮음",
+                      "중간",
+                      "높음",
+                      "매우 높음",
+                    ]
+                      .map(
+                        (b) =>
+                          `<option value="${b}" ${
+                            selectedBudget === b ? "selected" : ""
+                          }>${b}</option>`
+                      )
+                      .join("")}
                 </select>
             </div>
-            <div class="w-full md:w-auto flex-grow"><label for="purpose-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${colors.text};">여행 목적</label>
-                <select id="purpose-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${colors.primary}55; background-color: ${colors.secondary};">
-                    <option value="모두">-- 모든 목적 🎯 --</option>${['휴양', '관광', '액티비티'].map(p => `<option value="${p}" ${selectedPurpose === p ? 'selected' : ''}>${p}</option>`).join('')}
+            <div class="w-full md:w-auto flex-grow"><label for="purpose-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+              colors.text
+            };">여행 목적</label>
+                <select id="purpose-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                  colors.primary
+                }55; background-color: ${colors.secondary};">
+                    <option value="모두">-- 모든 목적 🎯 --</option>${[
+                      "휴양",
+                      "관광",
+                      "액티비티",
+                    ]
+                      .map(
+                        (p) =>
+                          `<option value="${p}" ${
+                            selectedPurpose === p ? "selected" : ""
+                          }>${p}</option>`
+                      )
+                      .join("")}
                 </select>
             </div>
-            <button id="search-button" class="mt-5 md:mt-0 w-full md:w-auto text-white font-black text-lg py-3 px-8 rounded-xl shadow-xl hover:opacity-95 transition duration-200 ease-in-out flex items-center justify-center transform active:scale-95" style="background-color: ${colors.primary};">
-                <i data-lucide="search" class="w-5 h-5 mr-3"></i> 여행지 검색 시작!
+            <button id="search-button" class="mt-5 md:mt-0 w-full md:w-auto text-white font-black text-nowrap text-lg py-3 px-8 rounded-xl shadow-xl hover:opacity-95 transition duration-200 ease-in-out flex items-center justify-center transform active:scale-95" style="background-color: ${
+              colors.primary
+            };">
+                <i data-lucide="search" class="w-5 h-5 mr-3"></i> 여행지 검색
             </button>
         </div>
         <div id="destinations-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">${content}</div>`;
-    }
+  }
 
-    function handleSearch() { isFiltered = true; renderApp(); }
-    function handleFilterChange(e) {
-        const target = e.target;
-        if (target.id === 'month-select') selectedMonth = parseInt(target.value);
-        else if (target.id === 'continent-select') selectedContinent = target.value;
-        else if (target.id === 'budget-select') selectedBudget = target.value;
-        else if (target.id === 'purpose-select') selectedPurpose = target.value;
-        isFiltered = false; renderApp();
-    }
+  function handleSearch() {
+    isFiltered = true;
+    renderApp();
+  }
+  function handleFilterChange(e) {
+    const target = e.target;
+    if (target.id === "month-select") selectedMonth = parseInt(target.value);
+    else if (target.id === "continent-select") selectedContinent = target.value;
+    else if (target.id === "budget-select") selectedBudget = target.value;
+    else if (target.id === "purpose-select") selectedPurpose = target.value;
+    isFiltered = false;
+    renderApp();
+  }
 
-    function attachEventListeners() {
-        const headerTitle = document.getElementById('header-title');
-        if (headerTitle) headerTitle.onclick = () => setView('intro');
-        const startButton = document.getElementById('start-button');
-        if (startButton) startButton.onclick = () => setView('guide');
-        const searchButton = document.getElementById('search-button');
-        if (searchButton) {
-            searchButton.onclick = handleSearch;
-            const monthSelect = document.getElementById('month-select');
-            const continentSelect = document.getElementById('continent-select');
-            const budgetSelect = document.getElementById('budget-select');
-            const purposeSelect = document.getElementById('purpose-select');
-            if (monthSelect) monthSelect.onchange = handleFilterChange;
-            if (continentSelect) continentSelect.onchange = handleFilterChange;
-            if (budgetSelect) budgetSelect.onchange = handleFilterChange;
-            if (purposeSelect) purposeSelect.onchange = handleFilterChange;
-        }
-    }
+  function showPasswordModal() {
+    const modal = document.createElement("div");
+    modal.className = "modal active";
+    modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="p-8">
+                    <h3 class="text-3xl font-bold mb-4 text-center" style="color: ${colors.primary};">
+                        <i data-lucide="lock" class="w-8 h-8 inline-block mr-2"></i>
+                        암호 입력
+                    </h3>
+                    <p class="text-gray-600 mb-6 text-center">해당 서비스를 이용하시려면 암호를 입력하세요.</p>
+                    <input type="password" id="password-input" class="w-full border-2 rounded-xl p-4 text-center text-2xl font-bold mb-4 focus:ring-2 focus:ring-primary focus:border-primary" style="border-color: ${colors.primary}55;" placeholder="암호 입력" maxlength="4">
+                    <div id="password-error" class="text-red-500 text-sm text-center mb-4 hidden">❌ 암호가 일치하지 않습니다</div>
+                    <div class="flex gap-3">
+                        <button onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl hover:bg-gray-400 transition">취소</button>
+                        <button onclick="checkPassword()" class="flex-1 text-white font-bold py-3 px-6 rounded-xl hover:opacity-90 transition" style="background-color: ${colors.primary};">확인</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    document.body.appendChild(modal);
+    const input = document.getElementById("password-input");
+    input.focus();
+    input.onkeypress = (e) => {
+      if (e.key === "Enter") checkPassword();
+    };
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+    if (typeof lucide !== "undefined" && lucide.createIcons)
+      lucide.createIcons();
+  }
 
-    window.onload = () => { currentUserId = 'user-' + Math.random().toString(36).substr(2, 9); renderApp(); };
+  window.checkPassword = function () {
+    const input = document.getElementById("password-input");
+    const error = document.getElementById("password-error");
+    if (input.value === "3217") {
+      closeModal();
+      setView("guide");
+    } else {
+      error.classList.remove("hidden");
+      input.value = "";
+      input.focus();
+      setTimeout(() => error.classList.add("hidden"), 2000);
+    }
+  };
+
+  function attachEventListeners() {
+    const headerTitle = document.getElementById("header-title");
+    if (headerTitle) headerTitle.onclick = () => setView("intro");
+    const startButton = document.getElementById("start-button");
+    if (startButton) startButton.onclick = showPasswordModal;
+    const searchButton = document.getElementById("search-button");
+    if (searchButton) {
+      searchButton.onclick = handleSearch;
+      const monthSelect = document.getElementById("month-select");
+      const continentSelect = document.getElementById("continent-select");
+      const budgetSelect = document.getElementById("budget-select");
+      const purposeSelect = document.getElementById("purpose-select");
+      if (monthSelect) monthSelect.onchange = handleFilterChange;
+      if (continentSelect) continentSelect.onchange = handleFilterChange;
+      if (budgetSelect) budgetSelect.onchange = handleFilterChange;
+      if (purposeSelect) purposeSelect.onchange = handleFilterChange;
+    }
+  }
+
+  window.onload = () => {
+    currentUserId = "user-" + Math.random().toString(36).substr(2, 9);
+    renderApp();
+  };
 </script>
