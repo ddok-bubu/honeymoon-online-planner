@@ -1161,11 +1161,11 @@
     return `<header class="text-center mb-10 p-6 bg-white rounded-3xl shadow-2xl border-b-8 border-r-4" style="border-color: ${
       colors.primary
     }AA;">
-            <h1 id="header-title" class="text-4xl md:text-6xl font-black tracking-tight mb-2 cursor-pointer transition duration-200 hover:text-primary" style="color: ${titleColor};">
+            <h1 id="header-title" class="flex items-center justify-center text-4xl md:text-6xl font-black tracking-tight mb-4 cursor-pointer transition duration-200 hover:text-primary" style="color: ${titleColor};">
                 <i data-lucide="map-pin" class='inline-block w-8 h-8 md:w-10 md:h-10 mr-3 align-text-bottom' style='color: ${
                   colors.primary
                 }; fill: ${colors.primary}33;'></i>
-                온라인 허니문 플래너
+                <p>온라인 허니문 플래너</p>
             </h1>
             <p class="text-lg md:text-2xl font-medium" style="color: ${
               colors.primary
@@ -1181,7 +1181,7 @@
     return `<div class="flex flex-col items-center justify-center min-h-[70vh] text-center p-8">
             <i data-lucide="plane" class="w-16 h-16 mb-6 animate-bounce-slow" style="color: ${colors.primary}; stroke-width: 1.5;"></i>
             <p class="text-2xl md:text-3xl font-semibold mb-3" style="color: ${colors.info};">똑딱부부💑가 안내하는 로맨틱 여행</p>
-            <h2 class="text-5xl md:text-7xl font-black text-gray-800 tracking-tight mb-8">✈️ 허니문, 어디로 떠날까요? 🌍</h2>
+            <h2 class="text-3xl md:text-7xl font-black text-gray-800 tracking-tight mb-8">✈️ 허니문, 어디로 떠날까요? 🌍</h2>
             <p class="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl font-light">두 분의 스타일(휴양 vs. 액티비티), 원하는 시기, 그리고 예산을 고려한 <span class='font-semibold' style="color: ${colors.primary};">가장 완벽한 신혼여행지</span>를 찾아 드립니다.</p>
             <button id="start-button" class="bg-primary text-white font-extrabold text-xl py-4 px-12 rounded-full shadow-xl hover:bg-opacity-90 transition duration-300 transform hover:scale-[1.05] active:scale-95 border-b-4 border-primary/80" style="background-color: ${colors.primary}; border-color: ${colors.primary}CC;">
                 <i data-lucide="search" class="w-6 h-6 inline-block mr-3"></i>나만의 여행지 추천받기
@@ -1318,13 +1318,13 @@
       : filteredDestinations.length === 0
       ? `<div class="col-span-full text-center p-12 bg-white rounded-2xl shadow-inner border-dashed border-2" style="border-color: ${colors.primary}80;"><i data-lucide="cloud-off" class='w-12 h-12 mx-auto mb-4' style='color: ${colors.primary};'></i><p class="text-xl font-semibold mb-2" style="color: ${colors.primary};">😭 아쉽게도 해당 조건에 맞는 추천 여행지가 없습니다.</p><p class="text-gray-600">다른 달이나 대륙을 선택하여 로맨틱한 여행지를 다시 찾아보세요!</p></div>`
       : filteredDestinations.map(renderDestinationCard).join("");
-    return `<div id="filter-bar" class="bg-white p-6 rounded-2xl shadow-xl mb-10 flex flex-col md:flex-row gap-2 items-center justify-between border-b-4" style="border-color: ${
+    return `<div id="filter-bar" class="bg-white p-6 rounded-2xl shadow-xl mb-10 flex flex-col lg:flex-row gap-2 items-center justify-between border-b-4" style="border-color: ${
       colors.primary
     }AA;">
-            <div class="w-full md:w-auto flex-grow"><label for="month-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+            <div class="w-full lg:w-auto flex-grow"><label for="month-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">여행 희망 달</label>
-                <select id="month-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                <select id="month-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
                   colors.primary
                 }55; background-color: ${colors.secondary};">
                     <option value="0">-- 모든 달 📅 --</option>${[
@@ -1339,10 +1339,10 @@
                       .join("")}
                 </select>
             </div>
-            <div class="w-full md:w-auto flex-grow"><label for="continent-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+            <div class="w-full lg:w-auto flex-grow"><label for="continent-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">대륙</label>
-                <select id="continent-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                <select id="continent-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
                   colors.primary
                 }55; background-color: ${colors.secondary};">
                     <option value="모두">-- 모든 대륙 🌎 --</option>${[
@@ -1361,10 +1361,10 @@
                       .join("")}
                 </select>
             </div>
-            <div class="w-full md:w-auto flex-grow"><label for="budget-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+            <div class="w-full lg:w-auto flex-grow"><label for="budget-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">예산대</label>
-                <select id="budget-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                <select id="budget-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
                   colors.primary
                 }55; background-color: ${colors.secondary};">
                     <option value="모두">-- 모든 예산대 💰 --</option>${[
@@ -1382,10 +1382,10 @@
                       .join("")}
                 </select>
             </div>
-            <div class="w-full md:w-auto flex-grow"><label for="purpose-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
+            <div class="w-full lg:w-auto flex-grow"><label for="purpose-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">여행 목적</label>
-                <select id="purpose-select" class="w-full md:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
+                <select id="purpose-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
                   colors.primary
                 }55; background-color: ${colors.secondary};">
                     <option value="모두">-- 모든 목적 🎯 --</option>${[
@@ -1402,7 +1402,7 @@
                       .join("")}
                 </select>
             </div>
-            <button id="search-button" class="mt-5 md:mt-0 w-full md:w-auto text-white font-black text-nowrap text-lg py-3 px-8 rounded-xl shadow-xl hover:opacity-95 transition duration-200 ease-in-out flex items-center justify-center transform active:scale-95" style="background-color: ${
+            <button id="search-button" class="mt-5 md:mt-0 w-full lg:w-40 text-white font-black text-nowrap text-lg py-3 px-8 rounded-xl shadow-xl hover:opacity-95 transition duration-200 ease-in-out flex items-center justify-center transform active:scale-95" style="background-color: ${
               colors.primary
             };">
                 <i data-lucide="search" class="w-5 h-5 mr-3"></i> 여행지 검색
