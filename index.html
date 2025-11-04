@@ -280,6 +280,7 @@
 </html>
 
 <script>
+  // 비행시간 정보: 국가별로 인천 출발 기준 비행 소요 시간
   const flightTimes = {
     인도네시아: "7시간 30분",
     태국: "5시간 30분",
@@ -327,6 +328,7 @@
     세이셸: "11시간 30분",
   };
 
+  // 여행지 데이터 배열: 각 여행지의 이름, 국가, 대륙, 분위기, 예산, 여행 타입, 추천 월, 팁 등 포함
   const destinationsData = [
     {
       name: "발리",
@@ -1309,18 +1311,21 @@
     },
   ];
 
+  // 색상 팔레트: 주요 UI 색상 값 정의
   const colors = {
-    primary: "#0265D2",
-    secondary: "#FFFFFF",
-    background: "#EAF2FF",
-    text: "#3B3B3B",
-    accent: "#FB8C00",
-    // best: "#0265D2",
-    good: "#4CAF50",
-    info: "#6B6B6B",
+    primary: "#0265D2", // 주요 색상
+    secondary: "#FFFFFF", // 보조 색상
+    background: "#EAF2FF", // 배경 색상
+    text: "#3B3B3B", // 텍스트 색상
+    danger: "#F13E3E", // 경고/위험 색상
+    accent: "#FB8C00", // 강조 색상
+    good: "#4CAF50", // GOOD 시즌 색상
+    info: "#6B6B6B", // 정보 색상
   };
 
+  // 국가명을 ISO 국가코드로 변환하는 함수
   function getCountryCode(country) {
+    // 국가명-코드 매핑 객체
     const codes = {
       인도네시아: "id",
       태국: "th",
@@ -1380,14 +1385,14 @@
     return codes[country] || "un";
   }
 
-  // Normalize budget string into a simple category: '낮음', '중간', '높음', '매우 높음'
+  // 예산 문자열을 카테고리(낮음/중간/높음/매우 높음)로 변환하는 함수
   function parseBudgetCategory(budgetStr) {
     if (!budgetStr || typeof budgetStr !== "string") return null;
     if (budgetStr.includes("매우")) return "매우 높음";
     if (budgetStr.includes("높음")) return "높음";
     if (budgetStr.includes("중간")) return "중간";
     if (budgetStr.includes("낮음") || budgetStr.includes("~500")) return "낮음";
-    // fallback: try to infer by numbers (not ideal but better than nothing)
+    // 숫자 기반 예산 추정 (예: "500만원")
     const m = budgetStr.match(/(\d+)만원/);
     if (m) {
       const v = parseInt(m[1], 10);
@@ -1399,15 +1404,27 @@
     return null;
   }
 
+  // 모든 여행지에 예산 카테고리 미리 계산하여 추가
+  if (typeof destinationsData !== "undefined") {
+    destinationsData.forEach((dest) => {
+      dest.budgetCategory = parseBudgetCategory(dest.budget);
+    });
+  }
+
+  // 현재 화면 뷰 상태 (intro/guide)
   let currentView = "intro";
+  // 현재 사용자 ID
   let currentUserId = null;
+  // 알림 타임아웃 핸들러
   let notificationTimeout = null;
+  // 선택된 필터 값들
   let selectedMonth = 0;
   let selectedContinent = "모두";
   let selectedBudget = "모두";
   let selectedPurpose = "모두";
   let isFiltered = false;
 
+  // 여행 일정 정보: 여행지별 대표 일정 및 코스
   const tripDurations = {
     발리: {
       days: "5박7일",
@@ -2123,83 +2140,84 @@
     },
   };
 
+  // 여행지 상세 정보 모달을 띄우는 함수
   function showMapModal(dest) {
+    // 여행지별 일정 정보 가져오기
     const tripInfo = tripDurations[dest.name] || {
       days: "5박7일",
       itinerary: ["정보 준비중입니다"],
     };
+    // 모달 생성 및 내용 삽입
     const modal = document.createElement("div");
     modal.className = "modal active";
     modal.innerHTML = `
-            <div class="modal-content" style="max-width: 1000px;">
-                <div class="modal-header border-b px-4 py-3 flex items-center justify-between">
-                    <div class="modal-title"></div>
-                    <button onclick="closeModal()" aria-label="닫기" class="text-gray-600 hover:text-gray-800">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
+  <div class="modal-content" style="max-width: 1000px;">
+    <div class="modal-header border-b px-4 py-3 flex items-center justify-between">
+      <div class="modal-title"></div>
+      <button onclick="closeModal()" aria-label="닫기" class="text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-primary rounded" tabindex="0">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="map-container">
+      <iframe width="100%" height="100%" frameborder="0" style="border:0" 
+        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
+          dest.name + ", " + dest.country
+        )}&zoom=10" 
+        allowfullscreen></iframe>
+    </div>
+    <div class="p-6">
+      <h3 class="text-2xl font-bold mb-4" style="color: ${colors.primary}">${
+      dest.name
+    }, ${dest.country}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex items-center">
+          <i data-lucide="plane" class="w-5 h-5 mr-2" style="color: ${
+            colors.accent
+          };"></i>
+          <p class="text-base"><strong>비행시간:</strong> <span style="color: ${
+            colors.primary
+          };">${flightTimes[dest.country] || "정보 없음"}</span></p>
+        </div>
+        <div class="flex items-center">
+          <i data-lucide="calendar" class="w-5 h-5 mr-2" style="color: ${
+            colors.info
+          };"></i>
+          <p class="text-base"><strong>평균 일정:</strong> <span style="color: ${
+            colors.primary
+          };">${tripInfo.days}</span></p>
+        </div>
+      </div>
+      <p class="text-gray-600 mb-4">${dest.note}</p>
+      <div class="bg-gray-50 rounded-xl p-4 mb-4">
+        <h4 class="text-lg font-bold mb-3 flex items-center" style="color: ${
+          colors.primary
+        };">
+          <i data-lucide="map" class="w-5 h-5 mr-2"></i>
+          대표 신혼여행 코스
+        </h4>
+        <div class="space-y-2">
+          ${tripInfo.itinerary
+            .map(
+              (item, idx) => `
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3" style="background-color: ${
+                  colors.primary
+                };">
+                  ${idx + 1}
                 </div>
-                <div class="map-container">
-                    <iframe width="100%" height="100%" frameborder="0" style="border:0" 
-                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
-                          dest.name + ", " + dest.country
-                        )}&zoom=10" 
-                        allowfullscreen></iframe>
-                </div>
-                <div class="p-6">
-                    <h3 class="text-2xl font-bold mb-4" style="color: ${
-                      colors.primary
-                    }">${dest.name}, ${dest.country}</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div class="flex items-center">
-                            <i data-lucide="plane" class="w-5 h-5 mr-2" style="color: ${
-                              colors.accent
-                            };"></i>
-                            <p class="text-base"><strong>비행시간:</strong> <span style="color: ${
-                              colors.primary
-                            };">${
-      flightTimes[dest.country] || "정보 없음"
-    }</span></p>
-                        </div>
-                        <div class="flex items-center">
-                            <i data-lucide="calendar" class="w-5 h-5 mr-2" style="color: ${
-                              colors.info
-                            };"></i>
-                            <p class="text-base"><strong>평균 일정:</strong> <span style="color: ${
-                              colors.primary
-                            };">${tripInfo.days}</span></p>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 mb-4">${dest.note}</p>
-                    <div class="bg-gray-50 rounded-xl p-4 mb-4">
-                        <h4 class="text-lg font-bold mb-3 flex items-center" style="color: ${
-                          colors.primary
-                        };">
-                            <i data-lucide="map" class="w-5 h-5 mr-2"></i>
-                            대표 신혼여행 코스
-                        </h4>
-                        <div class="space-y-2">
-                            ${tripInfo.itinerary
-                              .map(
-                                (item, idx) => `
-                                <div class="flex items-start">
-                                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3" style="background-color: ${
-                                      colors.primary
-                                    };">
-                                        ${idx + 1}
-                                    </div>
-                                    <p class="text-sm text-gray-700 pt-1">${item}</p>
-                                </div>
-                            `
-                              )
-                              .join("")}
-                        </div>
-                    </div>
-                    <button onclick="closeModal()" class="w-full bg-primary text-white font-bold py-3 px-6 rounded-xl hover:opacity-90 transition" style="background-color: ${
-                      colors.primary
-                    };">닫기</button>
-                </div>
-            </div>
-        `;
+                <p class="text-sm text-gray-700 pt-1">${item}</p>
+              </div>
+          `
+            )
+            .join("")}
+        </div>
+      </div>
+      <button onclick="closeModal()" class="w-full bg-primary text-white font-bold py-3 px-6 rounded-xl hover:opacity-90 transition" style="background-color: ${
+        colors.primary
+      };">닫기</button>
+    </div>
+  </div>
+`;
     document.body.appendChild(modal);
     modal.onclick = (e) => {
       if (e.target === modal) closeModal();
@@ -2208,11 +2226,20 @@
       lucide.createIcons();
   }
 
+  // 모달 닫기 함수
   window.closeModal = function () {
     const modal = document.querySelector(".modal");
     if (modal) modal.remove();
   };
 
+  // ESC 키로 모달 닫기 이벤트
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeModal();
+    }
+  });
+
+  // 전체 앱 렌더링 함수
   function renderApp() {
     const root = document.getElementById("root");
     root.className = "p-4 md:p-8 min-h-screen";
@@ -2226,11 +2253,13 @@
       lucide.createIcons();
   }
 
+  // 화면 뷰 변경 함수
   function setView(viewName) {
     currentView = viewName;
     renderApp();
   }
 
+  // 헤더 렌더링 함수
   function renderHeader() {
     const titleColor = currentView === "intro" ? colors.text : colors.primary;
     return `<header class="text-center mb-10 p-6 bg-white rounded-3xl shadow-2xl border-b-8 border-r-4" style="border-color: ${
@@ -2252,6 +2281,7 @@
         </header>`;
   }
 
+  // 인트로 페이지 렌더링 함수 (시작 화면)
   function renderIntroPage() {
     return `<div class="flex flex-col items-center justify-center min-h-[70vh] text-center p-8">
             <i data-lucide="plane" class="w-16 h-16 mb-6 animate-bounce-slow" style="color: ${colors.primary}; stroke-width: 1.5;"></i>
@@ -2264,11 +2294,15 @@
         </div>`;
   }
 
+  // 셀렉트 박스 스타일 개선: 화살표가 너무 오른쪽에 치우치지 않도록 padding-right 조정
+  const selectStyle = `border-color: ${colors.primary}55; background-color: ${colors.secondary}; padding-right: 2.5rem;`;
+
+  // 여행지 카드 렌더링 함수
   function renderDestinationCard(dest) {
     const isBest =
       selectedMonth !== 0 && dest.bestMonths.includes(selectedMonth);
-    const budgetColor = dest.budget.startsWith("높음")
-      ? colors.primary
+    const budgetColor = dest.budget.startsWith("매우 높음")
+      ? colors.danger
       : colors.text;
     return `<div class="card bg-white rounded-3xl shadow-2xl overflow-hidden transition duration-300 transform hover:scale-[1.03] cursor-pointer ${
       isBest ? "border-4" : "border-gray-50"
@@ -2277,7 +2311,6 @@
       "&quot;"
     )})" style="${isBest ? "border-color: " + colors.primary : ""};">
             <div class="flex justify-between items-center px-6 pt-4 pb-2 bg-gray-50/50">
-                <i data-lucide="cloud" class="w-5 h-5 text-gray-400"></i>
                 <h3 class="text-xs font-medium uppercase" style="color: ${
                   colors.primary
                 };">${dest.continent} 허니문</h3>
@@ -2351,29 +2384,29 @@
         </div>`;
   }
 
+  // 여행지 추천/필터링 페이지 렌더링 함수
   function renderGuidePage() {
+    // 여행지 필터링 및 정렬 함수
     const filterAndSortDestinations = () => {
       if (!isFiltered) return destinationsData;
       let list = destinationsData.filter((dest) => {
+        // 달, 대륙, 예산, 목적 필터링
         const monthMatch =
           selectedMonth === 0 ||
           dest.bestMonths.includes(selectedMonth) ||
           dest.goodMonths.includes(selectedMonth);
         const continentMatch =
           selectedContinent === "모두" || dest.continent === selectedContinent;
-        // Match budget by the category keyword (낮음/중간/높음/매우 높음) instead of exact numeric ranges.
-        // Many `dest.budget` strings are like "중간(500만원 ~ 800만원)" so checking for the
-        // keyword is more reliable across inconsistent numeric ranges in the data.
-        // Normalize destination budget to a category and compare to the selected category.
-        const destBudgetCategory = parseBudgetCategory(dest.budget);
+        // 예산 카테고리로 비교
         const budgetMatch =
           selectedBudget === "모두" ||
-          (selectedBudget && destBudgetCategory === selectedBudget);
+          (selectedBudget && dest.budgetCategory === selectedBudget);
         const purposeMatch =
           selectedPurpose === "모두" ||
           dest.travelType.includes(selectedPurpose);
         return monthMatch && continentMatch && budgetMatch && purposeMatch;
       });
+      // BEST 시즌 우선 정렬
       if (selectedMonth !== 0)
         list.sort((a, b) => {
           const isABest = a.bestMonths.includes(selectedMonth);
@@ -2398,9 +2431,7 @@
             <div class="w-full lg:w-auto flex-grow"><label for="month-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">여행 희망 달</label>
-                <select id="month-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
-                  colors.primary
-                }55; background-color: ${colors.secondary};">
+                <select id="month-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="${selectStyle}">
                     <option value="0">-- 모든 달 📅 --</option>${[
                       ...Array(12).keys(),
                     ]
@@ -2416,9 +2447,7 @@
             <div class="w-full lg:w-auto flex-grow"><label for="continent-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">대륙</label>
-                <select id="continent-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
-                  colors.primary
-                }55; background-color: ${colors.secondary};">
+                <select id="continent-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="${selectStyle}">
                     <option value="모두">-- 모든 대륙 🌎 --</option>${[
                       "아시아",
                       "오세아니아",
@@ -2438,9 +2467,7 @@
             <div class="w-full lg:w-auto flex-grow"><label for="budget-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">예산대</label>
-                <select id="budget-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
-                  colors.primary
-                }55; background-color: ${colors.secondary};">
+                <select id="budget-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="${selectStyle}">
                     <option value="모두">-- 모든 예산 💰 --</option>${[
                       "낮음",
                       "중간",
@@ -2459,9 +2486,7 @@
             <div class="w-full lg:w-auto flex-grow"><label for="purpose-select" class="block text-sm font-bold text-gray-700 mb-1" style="color: ${
               colors.text
             };">여행 목적</label>
-                <select id="purpose-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="border-color: ${
-                  colors.primary
-                }55; background-color: ${colors.secondary};">
+                <select id="purpose-select" class="w-full lg:w-40 border-2 rounded-xl p-3 transition duration-150 ease-in-out bg-secondary text-gray-800 shadow-sm focus:ring-2 focus:ring-accent" style="${selectStyle}">
                     <option value="모두">-- 모든 목적 🎯 --</option>${[
                       "휴양",
                       "관광",
@@ -2485,10 +2510,12 @@
         <div id="destinations-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">${content}</div>`;
   }
 
+  // 여행지 검색 버튼 클릭 시 필터 적용 함수
   function handleSearch() {
     isFiltered = true;
     renderApp();
   }
+  // 필터 값 변경 시 처리 함수
   function handleFilterChange(e) {
     const target = e.target;
     if (target.id === "month-select") selectedMonth = parseInt(target.value);
@@ -2499,15 +2526,15 @@
     renderApp();
   }
 
+  // 암호 입력 모달 표시 함수
   function showPasswordModal() {
     const modal = document.createElement("div");
     modal.className = "modal active";
     modal.innerHTML = `
       <div class="modal-content" style="max-width: 500px;">
-        <!-- Modal header with right close icon -->
         <div class="modal-header border-b px-4 py-3 flex items-center justify-between">
           <div class="modal-title"></div>
-          <button onclick="closeModal()" aria-label="닫기" class="text-gray-600 hover:text-gray-800 px-2 py-1">
+          <button onclick="closeModal()" aria-label="닫기" class="text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-primary rounded px-2 py-1" tabindex="0">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
@@ -2539,6 +2566,7 @@
       lucide.createIcons();
   }
 
+  // 암호 확인 함수
   window.checkPassword = function () {
     const input = document.getElementById("password-input");
     const error = document.getElementById("password-error");
@@ -2553,11 +2581,15 @@
     }
   };
 
+  // 주요 버튼 및 필터 이벤트 리스너 등록 함수
   function attachEventListeners() {
+    // 헤더 타이틀 클릭 시 인트로 화면으로 이동
     const headerTitle = document.getElementById("header-title");
     if (headerTitle) headerTitle.onclick = () => setView("intro");
+    // 시작 버튼 클릭 시 암호 입력 모달 표시
     const startButton = document.getElementById("start-button");
     if (startButton) startButton.onclick = showPasswordModal;
+    // 여행지 검색 버튼 및 필터 셀렉트 박스 이벤트 등록
     const searchButton = document.getElementById("search-button");
     if (searchButton) {
       searchButton.onclick = handleSearch;
@@ -2572,6 +2604,7 @@
     }
   }
 
+  // 페이지 로드 시 초기화 및 앱 렌더링
   window.onload = () => {
     currentUserId = "user-" + Math.random().toString(36).substr(2, 9);
     renderApp();
